@@ -1,15 +1,16 @@
 # Штука для управление твоими плагинам, датапаками, модами и даже ядром на сервере
 # Пакетный куратор
-- .AKA UmbrellaPackageManager
-  - - (
-  - UmbrellaCoreHandler
-  - UmbrellaExtensionManager
-  - - )
-- .AKA UPM
-  - - (
-  - UCH
-  - UEM
-  - - )
+## AKA
+  - UmbrellaPackageManager
+    - - (
+    - UmbrellaCoreHandler
+    - UmbrellaExtensionManager
+    - - )
+  - UPM
+    - - (
+    - UCH
+    - UEM
+    - - )
 
 #Для ЧЕГО?
   1. Хочу красиво из 1 файлика
