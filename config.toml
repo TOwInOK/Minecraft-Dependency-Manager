@@ -1,0 +1,26 @@
+#Example of config file
+
+[version]
+#which version you want? [spigot, paper, purpur]
+core = "paper"
+#any version if they have.
+version = "1.20.1"
+#lock you version of version
+frozen = false
+
+[plugins]
+#load plugins from Modrinth
+modrinth = [
+    "Chunky",
+    "Discordsrv",
+    "CoreProtect",
+    "NbtApi",
+    "WorldEdit",
+]
+#load plugins from SpigotMC
+spigot = []
+#load plugins from PaperMC
+paper = []
+
+#list for lock of update | plugins
+frozen = []
