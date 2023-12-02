@@ -3,6 +3,17 @@
 version = 3
 
 [[package]]
+name = "MinecraftAddonController"
+version = "0.0.1"
+dependencies = [
+ "reqwest",
+ "scraper",
+ "serde",
+ "tokio",
+ "toml",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -675,17 +686,6 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-targets 0.48.5",
-]
-
-[[package]]
-name = "parserjar"
-version = "0.1.0"
-dependencies = [
- "reqwest",
- "scraper",
- "serde",
- "tokio",
- "toml",
 ]
 
 [[package]]
