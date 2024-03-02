@@ -1,7 +1,7 @@
 #Example of config file
 
 [version]
-#which version you want? [Spigot, Paper, Purpur]
+#which version you want? [Vanila, Buckit, Spigot, Paper, Purpur]
 core = "Paper"
 #First: any version if they have.
 #Second: lock version. (stop update)
