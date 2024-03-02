@@ -2,7 +2,7 @@
 
 [version]
 #which version you want? [Vanila, Buckit, Spigot, Paper, Purpur]
-core = "Paper"
+core = "Vanila"
 #First: any version if they have.
 #Second: lock version. (stop update)
 version = ["1.20.1", false]
