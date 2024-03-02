@@ -80,8 +80,10 @@ impl Config {
         todo!()
     }
 
+    ///Function download core by info in [`Config`] 
     async fn download_core(self) -> Result<Option<()>, DownloadErrors> {
         match self.version {
+            //Download purpur
             Versions::Purpur(ver, freez) => {
                 if !freez {
                     //We don't need to download
@@ -90,10 +92,42 @@ impl Config {
                 //use if error
                 Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
             }
-            Versions::Paper(ver, freez) => todo!(),
-            Versions::Spigot(ver, freez) => todo!(),
-            Versions::Bucket(ver, freez) => todo!(),
-            Versions::Vanila(ver, freez) => todo!(),
+            //Download paper
+            Versions::Paper(ver, freez) => {
+                if !freez {
+                    //We don't need to download
+                    return Ok(None);
+                }
+                //use if error
+                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
+            },
+            //Download Spigot
+            Versions::Spigot(ver, freez) => {
+                if !freez {
+                    //We don't need to download
+                    return Ok(None);
+                }
+                //use if error
+                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
+            },
+            //Download Bucket
+            Versions::Bucket(ver, freez) => {
+                if !freez {
+                    //We don't need to download
+                    return Ok(None);
+                }
+                //use if error
+                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
+            },
+            //Download Vanila
+            Versions::Vanila(ver, freez) => {
+                if !freez {
+                    //We don't need to download
+                    return Ok(None);
+                }
+                //use if error
+                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
+            },
         }
     }
 }
