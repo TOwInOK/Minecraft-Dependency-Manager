@@ -2,11 +2,11 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 
-pub type Root = Vec<Root2>;
+pub type Root = Vec<ItemData>;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Root2 {
+pub struct ItemData {
     #[serde(rename = "game_versions")]
     pub game_versions: Vec<String>,
     pub loaders: Vec<String>,

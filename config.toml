@@ -1,21 +1,20 @@
 #Example of config file
 
 [version]
-#which version you want? [spigot, paper, purpur]
-core = "paper"
-#any version if they have.
-version = "1.20.1"
-#lock you version of version
-frozen = false
+#which version you want? [Spigot, Paper, Purpur]
+core = "Paper"
+#First: any version if they have.
+#Second: lock version. (stop update)
+version = ["1.20.1", false]
+#Example: version = ["1.20.1", false]
+#We are loading version 1.20.1 with the tag FFFw2f
+#Because the flag is "false", we no longer update this version to newer versions of same verion.
 
 [plugins]
 #load plugins from Modrinth
 modrinth = [
     "Chunky",
-    "Discordsrv",
-    "CoreProtect",
-    "NbtApi",
-    "WorldEdit",
+    "Simple Voice Chat",
 ]
 #load plugins from SpigotMC
 spigot = []
