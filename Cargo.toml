@@ -1,5 +1,5 @@
 [package]
-name = "MinecraftAddonController"
+name = "minecraft_addon_controller"
 version = "0.0.1"
 authors = ["TOwInOK"]
 edition = "2021"

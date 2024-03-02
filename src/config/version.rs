@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 ///Cores include version
 #[derive(Deserialize, Serialize, Debug)]
@@ -13,6 +13,6 @@ pub enum Versions {
 
 impl Default for Versions {
     fn default() -> Self {
-        Versions::Vanila("1.20.4".to_string(), false)
+        Versions::Vanila("latest".to_string(), false)
     }
 }

@@ -1,19 +1,17 @@
 mod datapack;
 mod errors;
+mod model;
 mod plugin;
 mod version;
-mod model;
 
-
-use std::default;
-use log::{error, info};
-use tokio::fs;
-use errors::*;
-use serde::{Serialize, Deserialize};
-use version::Versions;
 use datapack::*;
+use errors::*;
+use log::{error, info};
 use plugin::Plugin;
-
+use serde::{Deserialize, Serialize};
+use std::default;
+use tokio::fs;
+use version::Versions;
 
 ///Struct to load config from toml file.
 #[derive(Deserialize, Serialize, Debug)]
@@ -25,9 +23,12 @@ pub struct Config {
 
 impl Config {
     fn new(version: Versions, plugins: Option<Plugin>, datapacks: Option<Datapack>) -> Self {
-        Self { version, plugins, datapacks }
+        Self {
+            version,
+            plugins,
+            datapacks,
+        }
     }
-
 
     fn default() -> Self {
         Config::new(Versions::default(), None, None)
@@ -62,41 +63,37 @@ impl Config {
             }
         };
         config
-}
+    }
 
+    pub async fn download(config: Config) -> Result<(), DownloadErrors> {
+        let file = config.download_core().await;
+        todo!()
+    }
 
+    async fn download_plugins() -> Result<(), DownloadErrors> {
+        todo!()
+    }
+    async fn download_mods() -> Result<(), DownloadErrors> {
+        todo!()
+    }
+    async fn download_datapacks() -> Result<(), DownloadErrors> {
+        todo!()
+    }
 
-pub async fn download(config: Config) -> Result<(), DownloadErrors> {
-    let file = config.download_core().await;
-    todo!()
-}
-
-async fn download_plugins() -> Result<(), DownloadErrors> {
-    todo!()
-}
-async fn download_mods() -> Result<(), DownloadErrors> {
-    todo!()
-}
-async fn download_datapacks() -> Result<(), DownloadErrors> {
-    todo!()
-}
-
-async fn download_core(self) -> Result<Option<()>, DownloadErrors> {
-    match self.version {
-        Versions::Purpur(ver, freez) => {
-            if !freez {
-                //We don't need to download
-                return Ok(None) ;
+    async fn download_core(self) -> Result<Option<()>, DownloadErrors> {
+        match self.version {
+            Versions::Purpur(ver, freez) => {
+                if !freez {
+                    //We don't need to download
+                    return Ok(None);
+                }
+                //use if error
+                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
             }
-            //use if error
-            Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
-        },
-        Versions::Paper(ver, freez) => todo!(),
-        Versions::Spigot(ver, freez) => todo!(),
-        Versions::Bucket(ver, freez) => todo!(),
-        Versions::Vanila(ver, freez) => todo!(),
+            Versions::Paper(ver, freez) => todo!(),
+            Versions::Spigot(ver, freez) => todo!(),
+            Versions::Bucket(ver, freez) => todo!(),
+            Versions::Vanila(ver, freez) => todo!(),
+        }
     }
 }
-
-}
-
