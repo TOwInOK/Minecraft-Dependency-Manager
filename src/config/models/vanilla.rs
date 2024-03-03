@@ -1,4 +1,6 @@
+use log::debug;
 use log::info;
+use log::trace;
 use log::warn;
 use serde::Deserialize;
 use serde::Serialize;
@@ -83,39 +85,34 @@ impl Server {
 impl Vanilla {
     /// Making request to mojang api and find the link to download minecraft.jar
     pub async fn find(version: &str) -> Result<(), ConfigErrors> {
-        let link = Vanilla::find_version(version)
-            .await
-            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
-        let response = reqwest::get(link)
-            .await
-            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
-        let download_section: DownloadSection = response
-            .json()
-            .await
-            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
-
-        info!("Check body: {:#?}", &download_section.downloads.server);
+        let link = Vanilla::find_version(version).await?;
+        trace!("get link: {}", &link);
+        let response = reqwest::get(link).await?;
+        trace!("get response, status of request: {}", &response.status());
+        let download_section: DownloadSection = response.json().await?;
+        info!("Find jar to download!");
+        debug!("Check body: {:#?}", &download_section.downloads.server);
 
         Ok(())
     }
 
     ///Return `url` for get a json which contain link to donwload
-    pub async fn find_version(version: &str) -> Result<String, ConfigErrors> {
+    pub async fn find_version(mut version: &str) -> Result<String, ConfigErrors> {
         const LINK: &str = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 
-        let response = reqwest::get(LINK)
-            .await
-            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
-        let vanilla: Vanilla = response
-            .json()
-            .await
-            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
-
+        let response = reqwest::get(LINK).await?;
+        let vanilla: Vanilla = response.json().await?;
+        if version == "latest" {
+            version = &*vanilla.latest.release;
+        }
         vanilla
             .versions
             .iter()
             .find(|x| x.version.contains(version))
-            .map(|x| x.url.clone())
+            .map(|x| {
+                info!("find version: {}", &x.version);
+                x.url.clone()
+            })
             .ok_or_else(|| {
                 ConfigErrors::LoadCorrupt(format!("No one version like: {}, not found", version))
             })
