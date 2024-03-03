@@ -1,13 +1,12 @@
 mod datapack;
+mod downloader;
 mod errors;
 mod models;
 mod plugin;
 mod version;
-mod downloader;
 
-
-use downloader::Downloader;
 use datapack::*;
+use downloader::Downloader;
 use errors::*;
 use log::info;
 use models::vanilla::Vanilla;
@@ -51,36 +50,31 @@ impl Config {
 
     pub async fn download_all(self) -> Result<(), DownloadErrors> {
         //download core
-        self.choose_core().await
+            self.choose_core().await?;
+            self.choose_plugin().await
     }
 
     ///Function download core by info in [`Config`]
-    async fn choose_core(self) -> Result<(), DownloadErrors> {
-        match self.version {
+    async fn choose_core(&self) -> Result<(), DownloadErrors> {
+        match &self.version {
             //Download vanilla
             Versions::Vanilla(ver, freeze) => {
-                let (link, hash) = Vanilla::find(&*ver).await?;
-                Downloader::download_core(freeze, link, hash).await
+                let (link, hash) = Vanilla::find(&**ver).await?;
+                Downloader::download_core(*freeze, link, hash).await
             }
-        
             Versions::Purpur(_, _) => todo!(),
             Versions::Paper(_, _) => todo!(),
             Versions::Spigot(_, _) => todo!(),
             Versions::Bucket(_, _) => todo!(),
         }
     }
-}
-
-
-
-
-async fn download_plugins() -> Result<(), DownloadErrors> {
-    todo!()
-}
-async fn download_mods() -> Result<(), DownloadErrors> {
-    todo!()
-}
-async fn download_datapacks() -> Result<(), DownloadErrors> {
-    todo!()
-}
-
+    async fn choose_plugin(&self) -> Result<(), DownloadErrors> {
+        if let Some(plugins) = &self.plugins {
+            
+            todo!()
+        } else {
+            info!("Нет плагинов для скачивания");
+            Ok(())
+        }
+    }
+} 

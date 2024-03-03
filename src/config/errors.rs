@@ -54,8 +54,6 @@ impl From<reqwest::Error> for DownloadErrors {
     }
 }
 
-
-
 #[derive(Error, Debug)]
 pub enum CompareHashError {
     #[error("Конвертация Sha1 проведена не успешно : {0}")]
@@ -70,9 +68,9 @@ pub enum CompareHashError {
 impl From<CompareHashError> for ConfigErrors {
     fn from(value: CompareHashError) -> Self {
         match value {
-            CompareHashError::SHA1(msg)  => ConfigErrors::LoadCorrupt(msg.to_string()),
-            CompareHashError::SHA256(msg)  => ConfigErrors::LoadCorrupt(msg.to_string()),
-            CompareHashError::MD5(msg)  => ConfigErrors::LoadCorrupt(msg.to_string()),
+            CompareHashError::SHA1(msg) => ConfigErrors::LoadCorrupt(msg.to_string()),
+            CompareHashError::SHA256(msg) => ConfigErrors::LoadCorrupt(msg.to_string()),
+            CompareHashError::MD5(msg) => ConfigErrors::LoadCorrupt(msg.to_string()),
         }
     }
 }

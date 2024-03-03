@@ -4,13 +4,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Plugin {
     //list to download from https://modrinth.com/
-    modrinth: Option<Vec<String>>,
+    pub modrinth: Option<Vec<String>>,
     //list to download from https://www.spigotmc.org/
-    spigot: Option<Vec<String>>,
+    pub spigot: Option<Vec<String>>,
     //list to download from https://hangar.papermc.io/
-    paper: Option<Vec<String>>,
+    pub paper: Option<Vec<String>>,
     //List of plugins to stop updating
-    frozen: Option<Vec<String>>,
+    pub frozen: Option<Vec<String>>,
 }
 
 impl Plugin {

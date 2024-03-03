@@ -86,7 +86,10 @@ impl Vanilla {
         info!("Find jar to download!");
         debug!("Check body: {:#?}", &download_section.downloads.server);
 
-        Ok((download_section.downloads.server.url, ChooseHash::SHA1(download_section.downloads.server.sha1)))
+        Ok((
+            download_section.downloads.server.url,
+            ChooseHash::SHA1(download_section.downloads.server.sha1),
+        ))
     }
 
     ///Return `url` for get a json which contain link to download

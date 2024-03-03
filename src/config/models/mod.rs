@@ -1,2 +1,2 @@
-pub mod item;
+pub mod modrinth;
 pub mod vanilla;
