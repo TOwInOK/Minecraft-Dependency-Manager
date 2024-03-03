@@ -5,7 +5,7 @@
 core = "Vanilla"
 #First: any version if they have.
 #Second: lock version. (stop update)
-version = ["1.20.2", false]
+version = ["1.8.9", false]
 #Example: version = ["1.20.1", false]
 #We are loading version 1.20.1 with the tag FFFw2f
 #Because the flag is "false", we no longer update this version to newer versions of same verion.

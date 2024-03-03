@@ -5,6 +5,7 @@ use log::warn;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::config::downloader::ChooseHash;
 use crate::config::ConfigErrors;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -74,17 +75,9 @@ pub struct Server {
     pub url: String,
 }
 
-//
-
-impl Server {
-    pub async fn download(self) {
-        todo!()
-    }
-}
-
 impl Vanilla {
     /// Making request to mojang api and find the link to download minecraft.jar
-    pub async fn find(version: &str) -> Result<(), ConfigErrors> {
+    pub async fn find(version: &str) -> Result<(String, ChooseHash), ConfigErrors> {
         let link = Vanilla::find_version(version).await?;
         trace!("get link: {}", &link);
         let response = reqwest::get(link).await?;
@@ -93,7 +86,7 @@ impl Vanilla {
         info!("Find jar to download!");
         debug!("Check body: {:#?}", &download_section.downloads.server);
 
-        Ok(())
+        Ok((download_section.downloads.server.url, ChooseHash::SHA1(download_section.downloads.server.sha1)))
     }
 
     ///Return `url` for get a json which contain link to donwload

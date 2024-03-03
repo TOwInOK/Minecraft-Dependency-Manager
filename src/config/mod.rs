@@ -3,10 +3,14 @@ mod errors;
 mod models;
 mod plugin;
 mod version;
+mod downloader;
 
+
+use downloader::Dowloader;
+use std::env;
 use datapack::*;
 use errors::*;
-use log::{error, info};
+use log::{info, trace};
 use models::vanilla::Vanilla;
 use plugin::Plugin;
 use serde::{Deserialize, Serialize};
@@ -46,46 +50,21 @@ impl Config {
         Ok(config)
     }
 
-    pub async fn download(self) -> Result<(), DownloadErrors> {
+    pub async fn download_all(self) -> Result<(), DownloadErrors> {
         //download core
-        let file = self.download_core().await;
-        todo!()
-    }
-
-    async fn download_plugins() -> Result<(), DownloadErrors> {
-        todo!()
-    }
-    async fn download_mods() -> Result<(), DownloadErrors> {
-        todo!()
-    }
-    async fn download_datapacks() -> Result<(), DownloadErrors> {
+        let file = self.choose_core().await;
         todo!()
     }
 
     ///Function download core by info in [`Config`]
-    async fn download_core(self) -> Result<Option<String>, DownloadErrors> {
+    async fn choose_core(self) -> Result<(), DownloadErrors> {
         match self.version {
-            //Download purpur
-
-            //Download Vanilla
+            //Download vanilla
             Versions::Vanilla(ver, freeze) => {
-                if freeze {
-                    //We don't need to download
-                    return Ok(None);
-                }
-                //use if error
-                // Err(DownloadErrors::DownloadCorrupt("ff".to_string()))
-                // let tmp_dir = Builder::new().temp().map_err(|er| ConfigErrors::LoadCorrupt(er.to_string()));
-                match Vanilla::find(&*ver).await {
-                    Ok(_) => {
-                        todo!()
-                    }
-                    Err(e) => {
-                        error!("{:#?}", e);
-                        Err(e.into())
-                    }
-                }
+                let (link, hash) = Vanilla::find(&*ver).await?;
+                Dowloader::download_core(freeze, link, hash).await
             }
+        
             Versions::Purpur(_, _) => todo!(),
             Versions::Paper(_, _) => todo!(),
             Versions::Spigot(_, _) => todo!(),
@@ -93,3 +72,17 @@ impl Config {
         }
     }
 }
+
+
+
+
+async fn download_plugins() -> Result<(), DownloadErrors> {
+    todo!()
+}
+async fn download_mods() -> Result<(), DownloadErrors> {
+    todo!()
+}
+async fn download_datapacks() -> Result<(), DownloadErrors> {
+    todo!()
+}
+

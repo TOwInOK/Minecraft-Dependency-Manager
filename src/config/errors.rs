@@ -47,3 +47,33 @@ impl From<reqwest::Error> for ConfigErrors {
         ConfigErrors::LoadCorrupt(value.to_string())
     }
 }
+
+impl From<reqwest::Error> for DownloadErrors {
+    fn from(value: reqwest::Error) -> Self {
+        DownloadErrors::DownloadCorrupt(value.to_string())
+    }
+}
+
+
+
+
+#[derive(Error, Debug)]
+pub enum CompareHashError {
+    #[error("Конвертация Sha1 прозведена не успешно : {0}")]
+    SHA1(std::io::Error),
+    #[error("Конвертация Sha256 прозведена не успешно : {0}")]
+    SHA256(std::io::Error),
+    #[error("Конвертация Md5 прозведена не успешно : {0}")]
+    MD5(std::io::Error),
+}
+
+// Реализация From для преобразования DownloadErrors в ConfigErrors
+impl From<CompareHashError> for ConfigErrors {
+    fn from(value: CompareHashError) -> Self {
+        match value {
+            CompareHashError::SHA1(msg)  => ConfigErrors::LoadCorrupt(msg.to_string()),
+            CompareHashError::SHA256(msg)  => ConfigErrors::LoadCorrupt(msg.to_string()),
+            CompareHashError::MD5(msg)  => ConfigErrors::LoadCorrupt(msg.to_string()),
+        }
+    }
+}

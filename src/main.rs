@@ -15,7 +15,7 @@ async fn main() {
         Config::default()
     });
     log::debug!("{:#?}", config);
-    match Config::download(config).await {
+    match Config::download_all(config).await {
         Ok(_) => todo!(),
         Err(_) => todo!(),
     }
