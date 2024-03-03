@@ -1,7 +1,7 @@
 use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum DownloadErrors {
-    #[error("Загрузка прекращенна потому что: {0}")]
+    #[error("Загрузка прекращена потому что: {0}")]
     DownloadCorrupt(String),
 }
 
@@ -56,14 +56,13 @@ impl From<reqwest::Error> for DownloadErrors {
 
 
 
-
 #[derive(Error, Debug)]
 pub enum CompareHashError {
-    #[error("Конвертация Sha1 прозведена не успешно : {0}")]
+    #[error("Конвертация Sha1 проведена не успешно : {0}")]
     SHA1(std::io::Error),
-    #[error("Конвертация Sha256 прозведена не успешно : {0}")]
+    #[error("Конвертация Sha256 проведена не успешно : {0}")]
     SHA256(std::io::Error),
-    #[error("Конвертация Md5 прозведена не успешно : {0}")]
+    #[error("Конвертация Md5 проведена не успешно : {0}")]
     MD5(std::io::Error),
 }
 

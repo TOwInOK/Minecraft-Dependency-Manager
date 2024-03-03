@@ -89,7 +89,7 @@ impl Vanilla {
         Ok((download_section.downloads.server.url, ChooseHash::SHA1(download_section.downloads.server.sha1)))
     }
 
-    ///Return `url` for get a json which contain link to donwload
+    ///Return `url` for get a json which contain link to download
     pub async fn find_version(mut version: &str) -> Result<String, ConfigErrors> {
         const LINK: &str = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 

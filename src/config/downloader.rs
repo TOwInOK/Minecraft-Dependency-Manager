@@ -11,9 +11,9 @@ use crate::config::DownloadErrors;
 use super::{CompareHashError, ConfigErrors};
 
 
-pub struct Dowloader();
+pub struct Downloader();
 
-impl Dowloader {
+impl Downloader {
 
     ///Get all info about for download core
     //We need to get sha* or md5 for checking it
@@ -54,7 +54,7 @@ impl Dowloader {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
 pub enum ChooseHash {
     SHA1(String),
     SHA256(String),
@@ -65,39 +65,39 @@ impl ChooseHash {
     async fn calculate_hash(self, mut reader: impl tokio::io::AsyncRead + Unpin) -> Result<Self, CompareHashError> {
         match self {
             ChooseHash::SHA1(_) => {
-                let mut hasher = <Sha1 as Digest1>::new();
+                let mut hashed = <Sha1 as Digest1>::new();
                 let mut buffer = [0; 4096];
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;
                     }
-                    hasher.update(&buffer[..n]);
+                    hashed.update(&buffer[..n]);
                 }
-                let result = hasher.finalize();
+                let result = hashed.finalize();
                 Ok(ChooseHash::SHA1(format!("{:x}", result)))
             },
             ChooseHash::SHA256(_) => {
-                let mut hasher = <Sha256 as Digest256>::new();
+                let mut hashed = <Sha256 as Digest256>::new();
                 let mut buffer = [0; 4096];
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;
                     }
-                    hasher.update(&buffer[..n]);
+                    hashed.update(&buffer[..n]);
                 }
-                let result = hasher.finalize();
+                let result = hashed.finalize();
                 Ok(ChooseHash::SHA256(format!("{:x}", result)))
             },
             ChooseHash::MD5(_) => {
-                let mut hasher = <Md5 as md5::Digest>::new();
+                let mut hashed = <Md5 as md5::Digest>::new();
                 let mut buffer = [0; 4096];
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;
                     }
-                    hasher.update(&buffer[..n]);
+                    hashed.update(&buffer[..n]);
                 }
-                let result = hasher.finalize();
+                let result = hashed.finalize();
                 Ok(ChooseHash::MD5(format!("{:x}", result)))
             },
         }

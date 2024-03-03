@@ -6,11 +6,10 @@ mod version;
 mod downloader;
 
 
-use downloader::Dowloader;
-use std::env;
+use downloader::Downloader;
 use datapack::*;
 use errors::*;
-use log::{info, trace};
+use log::info;
 use models::vanilla::Vanilla;
 use plugin::Plugin;
 use serde::{Deserialize, Serialize};
@@ -45,15 +44,14 @@ impl Config {
 
         info!("Инициализация конфигурационного файла...");
         let config: Config = toml::from_str(&toml)?;
-        info!("Конфигурация успешно инициализированна.");
+        info!("Конфигурация успешно инициализирована.");
 
         Ok(config)
     }
 
     pub async fn download_all(self) -> Result<(), DownloadErrors> {
         //download core
-        let file = self.choose_core().await;
-        todo!()
+        self.choose_core().await
     }
 
     ///Function download core by info in [`Config`]
@@ -62,7 +60,7 @@ impl Config {
             //Download vanilla
             Versions::Vanilla(ver, freeze) => {
                 let (link, hash) = Vanilla::find(&*ver).await?;
-                Dowloader::download_core(freeze, link, hash).await
+                Downloader::download_core(freeze, link, hash).await
             }
         
             Versions::Purpur(_, _) => todo!(),

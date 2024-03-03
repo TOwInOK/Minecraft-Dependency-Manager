@@ -1,11 +1,15 @@
 {
     "rust-analyzer.showUnlinkedFileNotification": false,
     "cSpell.words": [
+        "парсинга",
         "Datapack",
         "Datapacks",
         "modrinth",
+        "mojang",
         "Purpur",
-        "tempfile"
+        "reqwest",
+        "tempfile",
+        "thiserror"
     ],
     "cSpell.language": "en,ru"
 }
