@@ -14,11 +14,11 @@ pub enum Versions {
     Paper(String, bool),
     Spigot(String, bool),
     Bucket(String, bool),
-    Vanila(String, bool),
+    Vanilla(String, bool),
 }
 
 impl Default for Versions {
     fn default() -> Self {
-        Versions::Vanila("latest".to_string(), false)
+        Versions::Vanilla("latest".to_string(), false)
     }
 }

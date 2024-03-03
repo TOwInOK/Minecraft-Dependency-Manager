@@ -7,10 +7,9 @@ mod version;
 use datapack::*;
 use errors::*;
 use log::{error, info};
-use models::{vanila::Vanilla, *};
+use models::{vanilla::Vanilla, *};
 use plugin::Plugin;
 use serde::{Deserialize, Serialize};
-use tempfile::Builder;
 use tokio::fs;
 use version::Versions;
 
@@ -85,50 +84,50 @@ impl Config {
     async fn download_core(self) -> Result<Option<()>, DownloadErrors> {
         match self.version {
             //Download purpur
-            Versions::Purpur(ver, freez) => {
-                if freez {
+            Versions::Purpur(ver, freeze) => {
+                if freeze {
                     //We don't need to download
                     return Ok(None);
                 }
                 //use if error
-                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
+                Err(DownloadErrors::DownloadCorrupt("ff".to_string()))
             }
             //Download paper
-            Versions::Paper(ver, freez) => {
-                if freez {
+            Versions::Paper(ver, feeze) => {
+                if feeze {
                     //We don't need to download
                     return Ok(None);
                 }
                 //use if error
-                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
+                Err(DownloadErrors::DownloadCorrupt("ff".to_string()))
             }
             //Download Spigot
-            Versions::Spigot(ver, freez) => {
-                if freez {
+            Versions::Spigot(ver, freeze) => {
+                if freeze {
                     //We don't need to download
                     return Ok(None);
                 }
                 //use if error
-                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
+                Err(DownloadErrors::DownloadCorrupt("ff".to_string()))
             }
             //Download Bucket
-            Versions::Bucket(ver, freez) => {
-                if freez {
+            Versions::Bucket(ver, freeze) => {
+                if freeze {
                     //We don't need to download
                     return Ok(None);
                 }
                 //use if error
-                Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
+                Err(DownloadErrors::DownloadCorrupt("ff".to_string()))
             }
-            //Download Vanila
-            Versions::Vanila(ver, freez) => {
-                if freez {
+            //Download Vanilla
+            Versions::Vanilla(ver, freeze) => {
+                if freeze {
                     //We don't need to download
                     return Ok(None);
                 }
                 //use if error
-                // Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
-                // let tmp_dir = Builder::new().tempdir().map_err(|er| ConfigErrors::LoadCorrapt(er.to_string()));
+                // Err(DownloadErrors::DownloadCorrupt("ff".to_string()))
+                // let tmp_dir = Builder::new().temp().map_err(|er| ConfigErrors::LoadCorrupt(er.to_string()));
                 let _ = match Vanilla::find(&*ver).await {
                     Ok(_) => {}
                     Err(e) => {

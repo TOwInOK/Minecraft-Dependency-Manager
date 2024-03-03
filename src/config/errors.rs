@@ -2,7 +2,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum DownloadErrors {
     #[error("Загрузка прекращенна потому что: {0}")]
-    DownloadCorrapt(String),
+    DownloadCorrupt(String),
 }
 
 #[derive(Error, Debug)]
