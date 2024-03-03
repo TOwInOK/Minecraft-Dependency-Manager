@@ -8,5 +8,5 @@ pub enum DownloadErrors {
 #[derive(Error, Debug)]
 pub enum ConfigErrors {
     #[error("Загрузка файла не была успешна: {0}")]
-    LoadCorrapt(String),
+    LoadCorrupt(String),
 }

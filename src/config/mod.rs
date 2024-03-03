@@ -1,16 +1,16 @@
 mod datapack;
 mod errors;
+mod models;
 mod plugin;
 mod version;
-mod models;
 
-use models::{vanila::Vanila, *};
-use tempfile::Builder;
 use datapack::*;
 use errors::*;
 use log::{error, info};
+use models::{vanila::Vanilla, *};
 use plugin::Plugin;
 use serde::{Deserialize, Serialize};
+use tempfile::Builder;
 use tokio::fs;
 use version::Versions;
 
@@ -81,7 +81,7 @@ impl Config {
         todo!()
     }
 
-    ///Function download core by info in [`Config`] 
+    ///Function download core by info in [`Config`]
     async fn download_core(self) -> Result<Option<()>, DownloadErrors> {
         match self.version {
             //Download purpur
@@ -101,7 +101,7 @@ impl Config {
                 }
                 //use if error
                 Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
-            },
+            }
             //Download Spigot
             Versions::Spigot(ver, freez) => {
                 if freez {
@@ -110,7 +110,7 @@ impl Config {
                 }
                 //use if error
                 Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
-            },
+            }
             //Download Bucket
             Versions::Bucket(ver, freez) => {
                 if freez {
@@ -119,7 +119,7 @@ impl Config {
                 }
                 //use if error
                 Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
-            },
+            }
             //Download Vanila
             Versions::Vanila(ver, freez) => {
                 if freez {
@@ -129,13 +129,15 @@ impl Config {
                 //use if error
                 // Err(DownloadErrors::DownloadCorrapt("ff".to_string()))
                 // let tmp_dir = Builder::new().tempdir().map_err(|er| ConfigErrors::LoadCorrapt(er.to_string()));
-                let _ = match Vanila::find(&*ver).await {
-                    Ok(_) => {},
-                    Err(e) => {error!("{:#?}", e)},
+                let _ = match Vanilla::find(&*ver).await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        error!("{:#?}", e)
+                    }
                 };
-                
+
                 todo!()
-            },
+            }
         }
     }
 }

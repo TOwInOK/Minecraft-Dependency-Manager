@@ -1,5 +1,5 @@
 use log::info;
-use reqwest::Request;
+use log::warn;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -7,7 +7,7 @@ use crate::config::ConfigErrors;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Vanila {
+pub struct Vanilla {
     pub latest: Latest,
     pub versions: Vec<Version>,
 }
@@ -22,17 +22,36 @@ pub struct Latest {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Version {
-    pub id: String,
+    #[serde(rename = "id")]
+    pub version: String,
+
     #[serde(rename = "type")]
-    #[serde(skip)]
-    pub type_field: String,
+    pub type_field: TypeOfVersion,
+
     pub url: String,
-    #[serde(skip)]
-    pub time: String,
-    #[serde(skip)]
-    pub release_time: String,
 }
 
+///Minecraft types of version
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum TypeOfVersion {
+    #[serde(rename = "release")]
+    Release,
+    #[serde(rename = "snapshot")]
+    Snapshot,
+    #[serde(rename = "old_beta")]
+    OldBeta,
+    #[serde(rename = "old_alpha")]
+    OldAlpha,
+}
+
+impl Default for TypeOfVersion {
+    fn default() -> Self {
+        warn!("Use default fn of TypeOfVersion");
+        TypeOfVersion::Release
+    }
+}
+
+//Area of download from list of details about version
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -53,22 +72,52 @@ pub struct Server {
     pub url: String,
 }
 
-impl Vanila {
-    ///Making request to mojang api and find the link to download minecraft.jar
+//
+
+impl Server {
+    pub async fn download(self) {
+        todo!()
+    }
+}
+
+impl Vanilla {
+    /// Making request to mojang api and find the link to download minecraft.jar
     pub async fn find(version: &str) -> Result<(), ConfigErrors> {
-        const LINK: &str = "https://piston-meta.mojang.com/v1/packages/8bcd47def18efee744bd0700e86ab44a96ade21f/1.20.4.json";
-        let body = match reqwest::get(LINK).await {
-            Ok(e) => {match e.json::<DownloadSection>().await {
-                Ok(e) => {e.downloads.server},
-                Err(e) => {Err(ConfigErrors::LoadCorrapt(e.to_string()))}?,
-            }},
-            Err(e) => {Err(ConfigErrors::LoadCorrapt(e.to_string()))}?,
-        };
-        info!("Check body: {:#?}", &body);
+        let link = Vanilla::find_version(version)
+            .await
+            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
+        let response = reqwest::get(link)
+            .await
+            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
+        let download_section: DownloadSection = response
+            .json()
+            .await
+            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
+
+        info!("Check body: {:#?}", &download_section.downloads.server);
+
         Ok(())
     }
 
-    pub async fn download(link: &str) {
-        todo!()
+    ///Return `url` for get a json which contain link to donwload
+    pub async fn find_version(version: &str) -> Result<String, ConfigErrors> {
+        const LINK: &str = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+
+        let response = reqwest::get(LINK)
+            .await
+            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
+        let vanilla: Vanilla = response
+            .json()
+            .await
+            .map_err(|e| ConfigErrors::LoadCorrupt(e.to_string()))?;
+
+        vanilla
+            .versions
+            .iter()
+            .find(|x| x.version.contains(version))
+            .map(|x| x.url.clone())
+            .ok_or_else(|| {
+                ConfigErrors::LoadCorrupt(format!("No one version like: {}, not found", version))
+            })
     }
 }
