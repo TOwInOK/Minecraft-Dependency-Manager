@@ -33,3 +33,23 @@
 # Will datapacks be added?
   It can be implemented, but as needed.
   Since data packs are a specific tool, it's better to install them manually.
+
+# Source:
+  ## Plugins: 
+    - Modrinth
+    - SpigotMC
+    - Hangar
+    - Bukkit (mb cause it's same on other sites)
+    - CurseForge (mb cause it's same on other sites)
+  ## Mods
+    - Modrinth
+    - CurseForge
+  ## Cores
+    - Bukkit
+    - Spigot
+    - PaperMC
+    - PurpurMC
+    - Fabric
+    - Forge
+    - NeoForge
+  
