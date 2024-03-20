@@ -5,7 +5,7 @@
 # Секция ядра
 [core]
     # Выбери один из вариантов: vanila, spigot, bucket, paper, purpur
-    provider = "Paper"
+    provider = "paper"
     # Версия сервера (например, "1.14.4" или специальный код)
     version = "1.14.4"
     # Замораживать ли объекты при наличии в системе
@@ -50,5 +50,5 @@
 
 # Секция дополнений
 [additions]
-configPluguinsFrom = "git@github.com:TOwInOK/test.git"
-key = "SUPEREKLy"
+    configPluguinsFrom = "git@github.com:TOwInOK/test.git"
+    key = "SUPEREKLy"

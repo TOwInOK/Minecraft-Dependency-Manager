@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use md5::digest::typenum::Mod;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
