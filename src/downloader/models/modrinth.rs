@@ -1,20 +1,7 @@
-use std::collections::HashMap;
-
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::config::downloader::ChooseHash;
-
-pub type Name = String;
-pub type Hash = ChooseHash;
-pub type ProjectID = String;
-pub type PluginID = String;
-pub type About = (Hash, ProjectID, PluginID);
-
-pub struct Modrinth {
-    plugin: HashMap<Name, About>
-}
 ///# Example
 ///we have cdn like this: `https://cdn.modrinth.com/data/PROJECT_ID/versions/ID/NAME-LOADER-VERSION.jar`
 ///we can take `[project_id]` -> `AANobbMI`
@@ -53,18 +40,4 @@ pub struct Dependency {
     pub file_name: Value,
     #[serde(rename = "dependency_type")]
     pub dependency_type: String,
-}
-
-
-impl Modrinth {
-    ///Convert Vector of data to hashmap
-    ///for download files
-    pub async fn convert(data: Vec<ModrinthData>) -> Self {
-        let hashmap: HashMap<Name, About> = HashMap::new();
-        data.iter().map(|x| 
-            {
-             
-            });
-        todo!()
-    }
 }

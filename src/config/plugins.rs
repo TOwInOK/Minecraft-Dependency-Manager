@@ -1,5 +1,3 @@
-mod models;
-
 use serde::{Deserialize, Serialize};
 use crate::config::Versions;
 
@@ -7,45 +5,38 @@ use crate::config::Versions;
 pub struct Plugin {
     // Откуда качаем
     #[serde(default)]
-    source: Sources,
+    pub source: Sources,
     // Версия
     #[serde(default)]
-    version: Versions,
+    pub version: Versions,
     // Стабильная, Альфа, Бета
     #[serde(default)]
-    channel: Channels,
+    pub channel: Channels,
     // Приостановить обновление
     #[serde(default)]
-    freeze: bool,
+    pub freeze: bool,
     // Нужно обновить
     #[serde(default)]
-    force_update: bool,
+    pub force_update: bool,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-enum Sources {
+
+#[derive(Deserialize, Serialize, Debug, Default)]
+pub enum Sources {
     Bucket,
     Spigot,
     Hangar,
+    #[default]
     Modrinth,
     CurseForge
 }
 
-impl Default for Sources {
-    fn default() -> Self {
-        Self::Modrinth
-    }
-}
 
-#[derive(Deserialize, Serialize, Debug)]
-enum Channels {
+#[derive(Deserialize, Serialize, Debug, Default)]
+pub enum Channels {
+    #[default]
     Stable,
     Beta,
     Alpha,
 }
 
-impl Default for Channels {
-    fn default() -> Self {
-        Self::Stable
-    }
-}

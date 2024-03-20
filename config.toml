@@ -1,5 +1,5 @@
 [core]
-    # Выбери один из вариантов: vanila, spigot, bucket, paper, purpur
+    # Выбери один из вариантов: Vanila, Spigot, Bucket, Paper, Purpur, Forge, NeoForge, Fabric
     provider = "Paper"
     version = "1.14.4"
     # Замораживать ли объекты при наличии в системе

@@ -1,4 +1,7 @@
 mod config;
+mod errors;
+mod downloader;
+
 use config::Config;
 
 #[tokio::main]
