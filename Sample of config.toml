@@ -50,5 +50,7 @@
 
 # Секция дополнений
 [additions]
+    #Git link для конфига
     configPluguinsFrom = "git@github.com:TOwInOK/test.git"
+    #Ключ если в привате
     key = "SUPEREKLy"

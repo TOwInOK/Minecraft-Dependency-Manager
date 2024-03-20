@@ -1,37 +1,18 @@
-#Sample of config
-
-#freez - добавлять ли на проверку/скачивание если object присутствует.
-
-# Секция ядра
 [core]
     # Выбери один из вариантов: vanila, spigot, bucket, paper, purpur
     provider = "Paper"
-    # Версия сервера (например, "1.14.4" или специальный код)
     version = "1.14.4"
     # Замораживать ли объекты при наличии в системе
     freeze = false
     force_update = false
 
-# Update - не требуется при загрузке, он нужен только когда freez = true, чтобы обновить на туже версию, либо принудительно обновить на самую последнюю, даже когда обновления нет.
-# Секция плагинов
 [plugins]
-    # Пример 1 - строчка
-    vc1 = {version = "ail5iPUK", chanel = "stable", freez = true, update = false}
-
-    # Пример 2 - строчка
-    cooler1 = {source = "Spigot", version = "ail5iPUK", chanel = "Beta", freez = false, update = false}
-
-    # Пример 3 - строчка
-    best_plugin_without_any_param1 = {}
-
-    # Пример 1 - секция
     [plugins.simple_voice_chat2]
     version = "ail5iPUK"
     chanel = "Stable"
     freez = false
     update = false
 
-    # Пример 2 - секция
     [plugins.cooler2]
     source = "Spigot"
     version = "ail5iPUK"
@@ -39,16 +20,8 @@
     freez = false
     update = true
 
-    # Пример 3 - секция
     [plugins.best_plugin_without_any_param2]
-    #Дефолт:
-    #source = Modrith
-    #version = "Latest"
-    #chanel = "Stable"
-    #freez = false
-    #update = false
 
-# Секция дополнений
 [additions]
 configPluguinsFrom = "git@github.com:TOwInOK/test.git"
 key = "SUPEREKLy"
