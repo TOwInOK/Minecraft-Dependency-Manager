@@ -1,15 +1,8 @@
-# Пакетный куратор
+# Пакетный куратор Package manager
 ## AKA
-  - UmbrellaPackageManager
-    - - (
-    - UmbrellaCoreHandler
-    - UmbrellaExtensionManager
-    - - )
-  - UPM
-    - - (
-    - UCH
-    - UEM
-    - - )
+  - Minecraft Addon Controller (MAC)
+  - Minecraft Package Manager (MPM)
+  - Umbrella Extension Manager (UXM)
 
 # Для ЧЕГО?
   1. Загрузка конфигурации из 1 файла
