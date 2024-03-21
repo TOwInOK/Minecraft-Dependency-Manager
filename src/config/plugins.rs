@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::config::Versions;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Plugin {
@@ -20,7 +20,6 @@ pub struct Plugin {
     pub force_update: bool,
 }
 
-
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum Sources {
     Bukkit,
@@ -28,9 +27,8 @@ pub enum Sources {
     Hangar,
     #[default]
     Modrinth,
-    CurseForge
+    CurseForge,
 }
-
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum Channels {
@@ -39,4 +37,3 @@ pub enum Channels {
     Beta,
     Alpha,
 }
-

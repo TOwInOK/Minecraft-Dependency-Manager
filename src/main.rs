@@ -1,10 +1,10 @@
 mod config;
-mod errors;
 mod downloader;
+mod errors;
 
 use config::Config;
 use downloader::Downloader;
-use log::{error, trace};
+use log::error;
 #[tokio::main]
 async fn main() {
     pretty_env_logger::formatted_builder()
@@ -20,5 +20,8 @@ async fn main() {
     });
     log::debug!("{:#?}", config);
     let downloader = Downloader::new().await;
-    downloader.check(&mut config).await.unwrap_or_else(|e| {error!("{e}")});
+    downloader
+        .check(&mut config)
+        .await
+        .unwrap_or_else(|e| error!("{e}"));
 }

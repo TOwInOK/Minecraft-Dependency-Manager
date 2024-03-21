@@ -1,18 +1,18 @@
+pub mod additions;
+pub mod core;
+mod lock;
 pub mod plugins;
 pub mod versions;
-pub mod core;
-pub mod additions;
-mod lock;
 
 use crate::errors::errors::ConfigErrors;
 use additions::Additions;
-use std::collections::HashMap;
 use core::Core;
-use versions::Versions;
 use log::info;
-use serde::{Deserialize, Serialize};
-use tokio::fs;
 use plugins::Plugin;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use tokio::fs;
+use versions::Versions;
 /// Структура для инициализации конфигурации
 ///
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -21,7 +21,7 @@ pub struct Config {
     #[serde(default)]
     pub core: Core,
     /// Лист плагинов
-    /// [name]:[Plugin] 
+    /// [name]:[Plugin]
     #[serde(default)]
     pub plugins: HashMap<String, Plugin>,
     /// Additions for git or keys
@@ -41,4 +41,4 @@ impl Config {
 
         Ok(config)
     }
-} 
+}

@@ -1,12 +1,12 @@
+use crate::config::versions::Versions;
+use crate::downloader::hash::ChooseHash;
+use crate::errors::errors::ConfigErrors;
 use log::debug;
 use log::info;
 use log::trace;
 use log::warn;
 use serde::Deserialize;
 use serde::Serialize;
-use crate::downloader::hash::ChooseHash;
-use crate::errors::errors::ConfigErrors;
-use crate::config::versions::Versions;
 
 type OuterLink = String;
 
@@ -101,13 +101,12 @@ impl Vanilla {
         trace!("Start find version of core!");
         let response = reqwest::get(LINK).await?;
         let vanilla: Vanilla = response.json().await?;
-        let local_version: &str;
-        match version {
-            Versions::Version(e) => local_version = e,
-            Versions::Latest => local_version = &vanilla.latest.release,
+        let local_version: &String = match version {
+            Versions::Version(e) => e,
+            Versions::Latest => &vanilla.latest.release,
         };
         info!("Need to find: {}", &local_version);
-    vanilla
+        vanilla
             .versions
             .iter()
             .find(|x| x.version.contains(local_version))
@@ -116,7 +115,10 @@ impl Vanilla {
                 x.url.clone()
             })
             .ok_or_else(|| {
-                ConfigErrors::LoadCorrupt(format!("No one version like: {}, not found", local_version))
+                ConfigErrors::LoadCorrupt(format!(
+                    "No one version like: {}, not found",
+                    local_version
+                ))
             })
     }
 }

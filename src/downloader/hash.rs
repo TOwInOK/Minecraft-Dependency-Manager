@@ -5,8 +5,6 @@ use sha2::Digest as Digest256;
 use sha2::Sha256;
 use tokio::io::AsyncReadExt;
 
-
-
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
 pub enum ChooseHash {
     SHA1(String),
@@ -15,10 +13,7 @@ pub enum ChooseHash {
 }
 
 impl ChooseHash {
-    pub async fn calculate_hash(
-        self,
-        mut reader: impl tokio::io::AsyncRead + Unpin,
-    ) -> bool {
+    pub async fn calculate_hash(self, mut reader: impl tokio::io::AsyncRead + Unpin) -> bool {
         match self {
             ChooseHash::SHA1(e) => {
                 let mut hashed = <Sha1 as Digest1>::new();
@@ -59,8 +54,6 @@ impl ChooseHash {
         }
     }
 }
-
-
 
 impl std::fmt::Display for ChooseHash {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
