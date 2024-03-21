@@ -10,14 +10,11 @@ use crate::{
         core::{Core, Provider},
         plugins::{Plugin, Sources},
         Config,
-    },
-    errors::errors::DownloadErrors,
+    }, downloader::models::model::ModelCore, errors::errors::DownloadErrors
 };
 
 type Name = String;
 type Link = String;
-
-//Query for download
 
 #[derive(Debug)]
 pub struct Downloader();
@@ -26,7 +23,7 @@ impl Downloader {
     pub async fn new() -> Self {
         Self {}
     }
-
+    ///Check and download plugins, mods, core
     pub async fn check(self, config: &mut Config) -> Result<(), DownloadErrors> {
         info!("Start check fn");
         self.check_core(&config.core, &config.additions.path_to_core)
@@ -82,6 +79,7 @@ impl Downloader {
         }
         todo!()
     }
+    /// download core
     async fn download_core(
         self,
         _name: &str,
@@ -90,8 +88,9 @@ impl Downloader {
         download_dir: &str,
     ) -> Result<(), DownloadErrors> {
         get_file(link, hash, download_dir).await?;
-        todo!()
+        todo!("add lock cache!")
     }
+    /// download plugin
     async fn download_plugin(self) -> Result<(), DownloadErrors> {
         todo!()
     }
@@ -101,6 +100,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+/// Get and write file by path
 async fn get_file(
     link: String,
     hash: ChooseHash,
@@ -109,7 +109,7 @@ async fn get_file(
     let response = reqwest::get(&link).await?;
     let content = response.bytes().await?;
 
-    // Проверка хеша
+    // Check hash
     if hash.calculate_hash(&*content).await {
         let file_name = Path::new(&link).file_name().unwrap_or_default(); // Name of file
         debug!("File name: {:#?}", &file_name);

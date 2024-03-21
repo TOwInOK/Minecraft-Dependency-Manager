@@ -8,6 +8,8 @@ use log::warn;
 use serde::Deserialize;
 use serde::Serialize;
 
+use super::model::ModelCore;
+
 type OuterLink = String;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -77,9 +79,9 @@ pub struct Server {
     pub url: String,
 }
 
-impl Vanilla {
+impl ModelCore for Vanilla {
     /// Making request to mojang api and find the link to download minecraft.jar
-    pub async fn find(version: &Versions) -> Result<(OuterLink, ChooseHash), ConfigErrors> {
+    async fn find(version: &Versions) -> Result<(OuterLink, ChooseHash), ConfigErrors> {
         info!("Start find fn with version: {:#?}", &version);
         let link = Self::find_version(version).await?;
         trace!("get link: {}", &link);
@@ -96,7 +98,7 @@ impl Vanilla {
     }
 
     ///Return `url` for get a json which contain links of all versions
-    pub async fn find_version(version: &Versions) -> Result<String, ConfigErrors> {
+    async fn find_version(version: &Versions) -> Result<String, ConfigErrors> {
         const LINK: &str = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
         trace!("Start find version of core!");
         let response = reqwest::get(LINK).await?;
