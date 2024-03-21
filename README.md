@@ -7,6 +7,7 @@
 # Для ЧЕГО?
   1. Загрузка конфигурации из 1 файла
   2. Автоматически и без головной боли
+  3. Не нужно запускать сервер чтобы обновить/загрузить плагины и моды!
 # Что сейчас хочу я.
   1. Обновление, загрузка плагинов.
   2. Обновление, загрузка ядра.
@@ -22,6 +23,7 @@
 # For WHAT?
   1. Loading configuration from a single file.
   2. Automatically and headache-free.
+  3. No need to run a server to update/download plugins and mods!
 # What I want right now.
   1. Update and download plugins.
   2. Update and download kernel.
@@ -33,3 +35,27 @@
 # Will datapacks be added?
   It can be implemented, but as needed.
   Since data packs are a specific tool, it's better to install them manually.
+
+# Source:
+  ## Plugins: 
+    - Modrinth
+    - SpigotMC
+    - Hangar
+    - Bukkit (mb cause it's same on other sites)
+    - CurseForge (mb cause it's same on other sites)
+  ## Mods
+    - Modrinth
+    - CurseForge
+  ## Cores
+    - Bukkit
+    - Spigot
+    - PaperMC
+    - PurpurMC
+    - Fabric
+    - Forge
+    - NeoForge
+    - BungeeCord
+    - Velocity
+    - Waterflow
+    
+  
