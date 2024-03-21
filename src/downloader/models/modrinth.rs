@@ -2,6 +2,9 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 
+type ProjectID = String;
+type PluginID = String;
+
 ///# Example
 ///we have cdn like this: `https://cdn.modrinth.com/data/PROJECT_ID/versions/ID/NAME-LOADER-VERSION.jar`
 ///we can take `[project_id]` -> `AANobbMI`

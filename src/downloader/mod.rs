@@ -1,62 +1,48 @@
 mod hash;
 mod downloader;
+mod models;
 
 use std::collections::HashMap;
-use crate::{config::{core::{Core, Provider}, plugins::{Plugin, Sources}, Config}, errors::errors::DownloadErrors};
-use self::hash::ChooseHash;
+use log::{debug, info};
+
+use crate::{config::{additions::Additions, core::{Core, Provider}, plugins::{Plugin, Sources}, Config}, errors::errors::DownloadErrors};
+use self::{hash::ChooseHash, models::vanilla::Vanilla};
 
 type Name = String;
 type Link = String;
 
-struct Downloader {
-    //List for download 
-    download_list: Vec<Type>,
-}
+//Query for download
 
-///name, link, hash
-enum Type {
-    Plugin(Name, Link, ChooseHash),
-    Core(Name, Link, ChooseHash),
-}
+#[derive(Debug)]
+pub struct Downloader();
 
 impl Downloader {
 
-    pub async fn check(&mut self, config: &mut Config) -> Result<(), DownloadErrors> {
-       self.check_core(&config.core).await?;
-       self.check_plugins(&config.plugins).await?;
+    pub async fn new () -> Self {
+        Self {}
+    }
+    
+    pub async fn check(self, config: &mut Config) -> Result<(), DownloadErrors> {
+        info!("Start check fn");
+       self.check_core(&config.core, &config.additions.path_to_core).await?;
+    //    self.check_plugins(&config.plugins).await?;
         todo!()
     }
 
-// ///Function download core by info in [`Config`]
-// async fn choose_core(&self) -> Result<(), DownloadErrors> {
-//     match &self.version {
-//         //Download vanilla
-//         Versions::Vanilla(ver, freeze) => {
-//             let (link, hash) = Vanilla::find(&**ver).await?;
-//             Downloader::download_core(*freeze, link, hash).await
-//         }
-//         Versions::Purpur(_, _) => todo!(),
-//         Versions::Paper(_, _) => todo!(),
-//         Versions::Spigot(_, _) => todo!(),
-//         Versions::Bucket(_, _) => todo!(),
-//     }
-// }
-// async fn choose_plugin(&self) -> Result<(), DownloadErrors> {
-//     if let Some(plugins) = &self.plugins {
-//         todo!()
-//     } else {
-//         info!("Нет плагинов для скачивания");
-//         Ok(())
-//     }
-// }
-
     ///Check core and add it into list for download.
-    async fn check_core(&mut self, core: &Core) -> Result<(), DownloadErrors> {
+    async fn check_core(self, core: &Core, path: &String) -> Result<(), DownloadErrors> {
+        info!("Check freeze and force_update");
         if core.freeze && !core.force_update {return Ok(());};
-
+        info!("Start to match provider of core");
         match &core.provider {
-            Provider::Vanilla => todo!(),
-            Provider::Bucket => todo!(),
+            Provider::Vanilla => {
+                info!("Find vanilla!");
+                let (link,hash) = Vanilla::find(&core.version).await?;
+                debug!("Find vanilla link: {}, hash: {}", &link, &hash);
+                info!("Start to download core!");
+                self.download_core("Vanilla", link, hash, path).await
+            },
+            Provider::Bukkit => todo!(),
             Provider::Spigot => todo!(),
             Provider::Paper => todo!(),
             Provider::Purpur => todo!(),
@@ -65,9 +51,6 @@ impl Downloader {
             Provider::NeoForge => todo!(),
         }
     }
-    // async fn download_mods(config: &Mods) {
-    //     todo!();
-    // }
     ///Check plugins and add it into list for download.
     async fn check_plugins(&mut self, plugins: &HashMap<String, Plugin>) -> Result<(), DownloadErrors> {
         if plugins.is_empty() {return Ok(());};
@@ -75,7 +58,7 @@ impl Downloader {
         for (name,plugin) in plugins.iter() {
             if plugin.freeze && !plugin.force_update {return Ok(());};
             match plugin.source {
-                Sources::Bucket => todo!(),
+                Sources::Bukkit => todo!(),
                 Sources::Spigot => todo!(),
                 Sources::Hangar => todo!(),
                 Sources::Modrinth => todo!(),
@@ -84,9 +67,33 @@ impl Downloader {
         } 
         todo!()
     }
+    async fn download_core(self, name: &str, link: String, hash: ChooseHash, download_dir: &String) -> Result<(), DownloadErrors> {
+        get_file(link, hash, download_dir).await?;
+        todo!()
+    }
+    async fn download_plugin(self) -> Result<(), DownloadErrors> {
+        todo!()
+    }
 }
 
+use std::path::Path;
+use std::fs::File;
+use std::io::Write;
 
-impl Sources {
+async fn get_file(link: String, hash: ChooseHash, download_dir: &str) -> Result<(), DownloadErrors> {
+    let response = reqwest::get(&link).await?;
+    let content = response.bytes().await?;
 
+    // Проверка хеша
+    if hash.calculate_hash(&*content).await {
+        let file_name = Path::new(&link).file_name().unwrap_or_default(); // Name of file
+        debug!("File name: {:#?}", &file_name);
+        let file_path = Path::new(download_dir).join(file_name); // Where to download with file name
+        debug!("File path: {:#?}", &file_path);
+        let mut file = File::create(&file_path)?; // Create the file
+        file.write_all(&content)?; //write
+        Ok(())
+    } else {
+        Err(DownloadErrors::DownloadCorrupt("Hash doesn't match".to_string()))
+    }
 }

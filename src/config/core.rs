@@ -20,7 +20,7 @@ pub struct Core {
 pub enum Provider {
     #[default]
     Vanilla,
-    Bucket,
+    Bukkit,
     Spigot,
     Paper,
     Purpur,

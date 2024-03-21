@@ -23,7 +23,7 @@ pub struct Plugin {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum Sources {
-    Bucket,
+    Bukkit,
     Spigot,
     Hangar,
     #[default]

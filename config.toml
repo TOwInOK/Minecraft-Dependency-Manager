@@ -1,6 +1,6 @@
 [core]
-    # Выбери один из вариантов: Vanila, Spigot, Bucket, Paper, Purpur, Forge, NeoForge, Fabric
-    provider = "Paper"
+    # Выбери один из вариантов: Vanilla, Spigot, Bucket, Paper, Purpur, Forge, NeoForge, Fabric
+    provider = "Vanilla"
     version = "1.14.4"
     # Замораживать ли объекты при наличии в системе
     freeze = false

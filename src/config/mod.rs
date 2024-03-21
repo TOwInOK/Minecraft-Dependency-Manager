@@ -1,7 +1,7 @@
 pub mod plugins;
-mod versions;
+pub mod versions;
 pub mod core;
-mod additions;
+pub mod additions;
 mod lock;
 
 use crate::errors::errors::ConfigErrors;
@@ -9,7 +9,7 @@ use additions::Additions;
 use std::collections::HashMap;
 use core::Core;
 use versions::Versions;
-use log::{info, warn};
+use log::info;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 use plugins::Plugin;
@@ -26,7 +26,7 @@ pub struct Config {
     pub plugins: HashMap<String, Plugin>,
     /// Additions for git or keys
     #[serde(default)]
-    pub additions: Option<Additions>,
+    pub additions: Additions,
 }
 
 impl Config {
