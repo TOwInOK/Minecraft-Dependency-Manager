@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug, Default)]
+#[serde(rename_all = "snake_case")]
 pub struct Additions {
     // git link
-    #[serde(rename = "configPluguinsFrom")]
     #[serde(default)]
     config_plugins_from: Option<String>,
     // git key

@@ -12,6 +12,8 @@
     # Версия сервера (например, "1.14.4" или специальный код)
     # Server version (e.g., "1.14.4" or a special code)
     version = "1.14.4"
+    #version = "latest" <- by default
+
     # Замораживать ли объекты при наличии в системе
     # Whether to freeze objects if present in the system
     freeze = false
@@ -23,11 +25,11 @@
 [plugins]
     # Пример 1 - строчка
     # Example 1 - single line
-    vc1 = {version = "ail5iPUK", chanel = "stable", freez = true, update = false}
+    vc1 = {version = "ail5iPUK", channel = "stable", freeze = true, update = false}
 
     # Пример 2 - строчка
     # Example 2 - single line
-    cooler1 = {source = "Spigot", version = "ail5iPUK", chanel = "Beta", freez = false, update = false}
+    cooler1 = {source = "Spigot", version = "ail5iPUK", channel = "Beta", freeze = false, update = false}
 
     # Пример 3 - строчка
     # Example 3 - single line
@@ -37,8 +39,8 @@
     # Example 1 - section
     [plugins.simple_voice_chat2]
     version = "ail5iPUK"
-    chanel = "Stable"
-    freez = false
+    channel = "Stable"
+    freeze = false
     update = false
 
     # Пример 2 - секция
@@ -46,8 +48,8 @@
     [plugins.cooler2]
     source = "Spigot"
     version = "ail5iPUK"
-    chanel = "Beta"
-    freez = false
+    channel = "Beta"
+    freeze = false
     update = true
 
     # Пример 3 - секция
@@ -56,7 +58,7 @@
     #Дефолт: / Default:
     #source = Modrith
     #version = "Latest"
-    #chanel = "Stable"
+    #channel = "Stable"
     #freez = false
     #update = false
 

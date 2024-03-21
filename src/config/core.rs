@@ -17,6 +17,7 @@ pub struct Core {
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
+#[serde(rename_all = "lowercase")]
 pub enum Provider {
     #[default]
     Vanilla,

@@ -1,7 +1,7 @@
 [core]
     # Выбери один из вариантов: Vanilla, Spigot, Bucket, Paper, Purpur, Forge, NeoForge, Fabric
-    provider = "Vanilla"
-    version = "1.14.4"
+    provider = "spigot"
+    version = "1.10.1"
     # Замораживать ли объекты при наличии в системе
     freeze = false
     force_update = false
@@ -9,18 +9,16 @@
 [plugins]
     [plugins.simple_voice_chat2]
     version = "ail5iPUK"
-    chanel = "Stable"
-    freez = false
+    channel = "beta"
+    freeze = false
     update = false
 
     [plugins.cooler2]
-    source = "Spigot"
+    source = "hangar"
     version = "ail5iPUK"
-    chanel = "Beta"
-    freez = false
+    channel = "beta"
+    freeze = false
     update = true
-
-    [plugins.best_plugin_without_any_param2]
 
 [additions]
 configPluguinsFrom = "git@github.com:TOwInOK/test.git"

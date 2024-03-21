@@ -20,7 +20,7 @@ pub struct Config {
     /// Minecraft core
     #[serde(default)]
     pub core: Core,
-    /// Лист плагинов
+    /// Plugin list
     /// [name]:[Plugin]
     #[serde(default)]
     pub plugins: HashMap<String, Plugin>,

@@ -21,6 +21,7 @@ pub struct Plugin {
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
+#[serde(rename_all = "lowercase")]
 pub enum Sources {
     Bukkit,
     Spigot,
@@ -31,6 +32,7 @@ pub enum Sources {
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
+#[serde(rename_all = "lowercase")]
 pub enum Channels {
     #[default]
     Stable,
