@@ -1,11 +1,12 @@
 use md5::Md5;
+use serde::{Deserialize, Serialize};
 use sha1::Digest as Digest1;
 use sha1::Sha1;
 use sha2::Digest as Digest256;
 use sha2::Sha256;
 use tokio::io::AsyncReadExt;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Serialize, Deserialize)]
 pub enum ChooseHash {
     SHA1(String),
     SHA256(String),

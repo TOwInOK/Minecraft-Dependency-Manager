@@ -13,6 +13,12 @@ impl From<std::io::Error> for DownloadErrors {
 }
 
 #[derive(Error, Debug)]
+pub enum LockErrors {
+    #[error("Ошибка удаление файла: {0}")]
+    DeleteError(#[from] std::io::Error),
+}
+
+#[derive(Error, Debug)]
 pub enum ConfigErrors {
     #[error("Загрузка файла не была успешна: {0}")]
     LoadCorrupt(String),
@@ -20,6 +26,8 @@ pub enum ConfigErrors {
     ReadError(#[from] std::io::Error),
     #[error("Ошибка парсинга TOML: {0}")]
     ParseError(#[from] toml::de::Error),
+    #[error("Ошибка сериализация TOML: {0}")]
+    SerializeError(#[from] toml::ser::Error),
 }
 
 // Реализация From для преобразования DownloadErrors в ConfigErrors
@@ -38,6 +46,7 @@ impl From<ConfigErrors> for DownloadErrors {
             ConfigErrors::LoadCorrupt(msg) => DownloadErrors::DownloadCorrupt(msg),
             ConfigErrors::ReadError(msg) => DownloadErrors::DownloadCorrupt(msg.to_string()),
             ConfigErrors::ParseError(msg) => DownloadErrors::DownloadCorrupt(msg.to_string()),
+            ConfigErrors::SerializeError(msg) => DownloadErrors::DownloadCorrupt(msg.to_string()),
         }
     }
 }

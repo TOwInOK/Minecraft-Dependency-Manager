@@ -1,4 +1,4 @@
-mod hash;
+pub mod hash;
 mod models;
 
 use log::{debug, info};
@@ -7,45 +7,74 @@ use std::collections::HashMap;
 use self::{hash::ChooseHash, models::vanilla::Vanilla};
 use crate::{
     config::{
-        core::{Core, Provider},
-        plugins::{Plugin, Sources},
-        Config,
-    }, downloader::models::model::ModelCore, errors::errors::DownloadErrors
+        core::{Core, Provider}, lock::{Lock, Meta, MetaData}, plugins::{Plugin, Sources}, Config
+    },
+    downloader::models::model::ModelCore,
+    errors::errors::DownloadErrors,
 };
 
 type Name = String;
 type Link = String;
 
 #[derive(Debug)]
-pub struct Downloader();
+pub struct Downloader<'config, 'lock>{
+    config: &'config mut Config,
+    lock: &'lock mut Lock,
+}
 
-impl Downloader {
-    pub async fn new() -> Self {
-        Self {}
+impl<'config, 'lock> Downloader<'config, 'lock>{
+
+    pub fn new(config: &'config mut Config, lock: &'lock mut Lock) -> Self {
+        Self { config, lock }
     }
+    
     ///Check and download plugins, mods, core
-    pub async fn check(self, config: &mut Config) -> Result<(), DownloadErrors> {
+    pub async fn check(&mut self) -> Result<(), DownloadErrors> {
         info!("Start check fn");
-        self.check_core(&config.core, &config.additions.path_to_core)
-            .await?;
+        self.check_core().await?;
         //    self.check_plugins(&config.plugins).await?;
         todo!()
     }
 
     ///Check core and add it into list for download.
-    async fn check_core(self, core: &Core, path: &str) -> Result<(), DownloadErrors> {
-        info!("Check freeze and force_update");
-        if core.freeze && !core.force_update {
-            return Ok(());
-        };
+    async fn check_core(&mut self) -> Result<(), DownloadErrors> {
         info!("Start to match provider of core");
-        match &core.provider {
+        match &self.config.core.provider {
             Provider::Vanilla => {
                 info!("Find vanilla!");
-                let (link, hash) = Vanilla::find(&core.version).await?;
+                let (link, hash) = Vanilla::find(&self.config.core.version).await?;
                 debug!("Find vanilla link: {}, hash: {}", &link, &hash);
                 info!("Start to download core!");
-                self.download_core("Vanilla", link, hash, path).await
+                match self.lock.exist(&Meta::Core(MetaData { name: "Vanilla".to_string(), version: self.config.core.version.clone() })).await {
+                    crate::config::lock::ExistState::Exist => {
+                        info!("Check freeze and force_update");
+                        if self.config.core.freeze && !self.config.core.force_update {
+                            info!("Core has iced");
+                            return Ok(());
+                        };
+                        if self.config.core.force_update {
+                            info!("Force update core!");
+                            self.lock.delete_core(&self.config.additions.path_to_core).await;
+                            return self.download_core("Vanilla", link, hash).await
+                        } 
+                        info!("Core doesn't need to download");
+                        return Ok(());
+                    },
+                    crate::config::lock::ExistState::DifferentVersion => {
+                        info!("Check freeze and force_update");
+                        if self.config.core.freeze && !self.config.core.force_update {
+                            info!("Core has iced");
+                            return Ok(());
+                        };
+                        info!("Core have different version, Download!");
+                        self.lock.delete_core(&self.config.additions.path_to_core).await;
+                        self.download_core("Vanilla", link, hash).await
+                    },
+                    crate::config::lock::ExistState::None => {
+                        info!("No one core find, Download!");
+                        self.download_core("Vanilla", link, hash).await
+                    },
+                }
             }
             Provider::Bukkit => todo!(),
             Provider::Spigot => todo!(),
@@ -58,14 +87,13 @@ impl Downloader {
     }
     ///Check plugins and add it into list for download.
     async fn check_plugins(
-        &mut self,
-        plugins: &HashMap<String, Plugin>,
+        &self
     ) -> Result<(), DownloadErrors> {
-        if plugins.is_empty() {
+        if self.config.plugins.is_empty() {
             return Ok(());
         };
 
-        for (name, plugin) in plugins.iter() {
+        for (name, plugin) in self.config.plugins.iter() {
             if plugin.freeze && !plugin.force_update {
                 return Ok(());
             };
@@ -81,14 +109,16 @@ impl Downloader {
     }
     /// download core
     async fn download_core(
-        self,
-        _name: &str,
+        &mut self,
+        name: &str,
         link: String,
         hash: ChooseHash,
-        download_dir: &str,
     ) -> Result<(), DownloadErrors> {
-        get_file(link, hash, download_dir).await?;
-        todo!("add lock cache!")
+        get_file(link, hash, &self.config.additions.path_to_core, name).await?;
+        let meta = Meta::Core(MetaData::new(name.to_string(), self.config.core.version.clone()));
+        self.lock.add(meta).await;
+        self.lock.save().await?;
+        Ok(())
     }
     /// download plugin
     async fn download_plugin(self) -> Result<(), DownloadErrors> {
@@ -105,13 +135,16 @@ async fn get_file(
     link: String,
     hash: ChooseHash,
     download_dir: &str,
+    name: &str,
 ) -> Result<(), DownloadErrors> {
     let response = reqwest::get(&link).await?;
     let content = response.bytes().await?;
 
     // Check hash
     if hash.calculate_hash(&*content).await {
-        let file_name = Path::new(&link).file_name().unwrap_or_default(); // Name of file
+        let mut name = name.to_owned();
+        name.push_str(".jar");
+        let file_name = Path::new(&name); // Name of file
         debug!("File name: {:#?}", &file_name);
         let file_path = Path::new(download_dir).join(file_name); // Where to download with file name
         debug!("File path: {:#?}", &file_path);

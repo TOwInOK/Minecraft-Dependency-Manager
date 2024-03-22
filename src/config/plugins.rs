@@ -1,7 +1,7 @@
 use crate::config::Versions;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct Plugin {
     // Откуда качаем
     #[serde(default)]
@@ -20,7 +20,7 @@ pub struct Plugin {
     pub force_update: bool,
 }
 
-#[derive(Deserialize, Serialize, Debug, Default)]
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Sources {
     Bukkit,
@@ -31,7 +31,7 @@ pub enum Sources {
     CurseForge,
 }
 
-#[derive(Deserialize, Serialize, Debug, Default)]
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Channels {
     #[default]

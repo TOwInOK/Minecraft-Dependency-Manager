@@ -1,5 +1,6 @@
-use crate::{config::versions::Versions, downloader::hash::ChooseHash, errors::errors::ConfigErrors};
-
+use crate::{
+    config::versions::Versions, downloader::hash::ChooseHash, errors::errors::ConfigErrors,
+};
 
 pub trait ModelCore {
     async fn find(version: &Versions) -> Result<(String, ChooseHash), ConfigErrors>;

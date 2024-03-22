@@ -1,6 +1,6 @@
 use crate::config::Versions;
 use serde::{Deserialize, Serialize};
-#[derive(Deserialize, Serialize, Debug, Default)]
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 pub struct Core {
     // Ядро
     #[serde(default)]
@@ -16,7 +16,7 @@ pub struct Core {
     pub force_update: bool,
 }
 
-#[derive(Deserialize, Serialize, Debug, Default)]
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum Provider {
     #[default]

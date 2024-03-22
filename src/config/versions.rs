@@ -1,11 +1,10 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Clone, Eq)]
 pub enum Versions {
     Version(String),
     #[default]
     Latest,
 }
-
 
 impl<'de> Deserialize<'de> for Versions {
     fn deserialize<D>(deserializer: D) -> Result<Versions, D::Error>
