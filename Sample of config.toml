@@ -12,6 +12,7 @@
     # Версия сервера (например, "1.14.4" или специальный код)
     # Server version (e.g., "1.14.4" or a special code)
     version = "1.14.4"
+    build = ""
     #version = "latest" <- by default
 
     # Замораживать ли объекты при наличии в системе

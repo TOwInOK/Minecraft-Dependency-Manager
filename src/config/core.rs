@@ -8,6 +8,9 @@ pub struct Core {
     // Версия ядра
     #[serde(default)]
     pub version: Versions,
+    // Версия билда ядра
+    #[serde(default)]
+    pub build: String,
     // Приостановить обновление
     #[serde(default)]
     pub freeze: bool,
@@ -21,9 +24,8 @@ pub struct Core {
 pub enum Provider {
     #[default]
     Vanilla,
-    Bukkit,
-    Spigot,
     Paper,
+    Folia,
     Purpur,
     Fabric,
     Forge,

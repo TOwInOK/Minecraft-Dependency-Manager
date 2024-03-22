@@ -1,20 +1,20 @@
 pub mod hash;
 mod models;
 
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
 use log::{debug, info};
-use std::collections::HashMap;
 
 use self::{hash::ChooseHash, models::vanilla::Vanilla};
 use crate::{
     config::{
-        core::{Core, Provider}, lock::{Lock, Meta, MetaData}, plugins::{Plugin, Sources}, Config
+        core::Provider, lock::{Lock, Meta, MetaData}, plugins::Sources, Config
     },
-    downloader::models::model::ModelCore,
+    downloader::models::{model::ModelCore, papermc::Paper},
     errors::errors::DownloadErrors,
 };
 
-type Name = String;
-type Link = String;
 
 #[derive(Debug)]
 pub struct Downloader<'config, 'lock>{
@@ -31,9 +31,8 @@ impl<'config, 'lock> Downloader<'config, 'lock>{
     ///Check and download plugins, mods, core
     pub async fn check(&mut self) -> Result<(), DownloadErrors> {
         info!("Start check fn");
-        self.check_core().await?;
-        //    self.check_plugins(&config.plugins).await?;
-        todo!()
+        self.check_core().await
+        // self.check_plugins(&config.plugins).await?;
     }
 
     ///Check core and add it into list for download.
@@ -41,44 +40,12 @@ impl<'config, 'lock> Downloader<'config, 'lock>{
         info!("Start to match provider of core");
         match &self.config.core.provider {
             Provider::Vanilla => {
-                info!("Find vanilla!");
-                let (link, hash) = Vanilla::find(&self.config.core.version).await?;
-                debug!("Find vanilla link: {}, hash: {}", &link, &hash);
-                info!("Start to download core!");
-                match self.lock.exist(&Meta::Core(MetaData { name: "Vanilla".to_string(), version: self.config.core.version.clone() })).await {
-                    crate::config::lock::ExistState::Exist => {
-                        info!("Check freeze and force_update");
-                        if self.config.core.freeze && !self.config.core.force_update {
-                            info!("Core has iced");
-                            return Ok(());
-                        };
-                        if self.config.core.force_update {
-                            info!("Force update core!");
-                            self.lock.delete_core(&self.config.additions.path_to_core).await;
-                            return self.download_core("Vanilla", link, hash).await
-                        } 
-                        info!("Core doesn't need to download");
-                        return Ok(());
-                    },
-                    crate::config::lock::ExistState::DifferentVersion => {
-                        info!("Check freeze and force_update");
-                        if self.config.core.freeze && !self.config.core.force_update {
-                            info!("Core has iced");
-                            return Ok(());
-                        };
-                        info!("Core have different version, Download!");
-                        self.lock.delete_core(&self.config.additions.path_to_core).await;
-                        self.download_core("Vanilla", link, hash).await
-                    },
-                    crate::config::lock::ExistState::None => {
-                        info!("No one core find, Download!");
-                        self.download_core("Vanilla", link, hash).await
-                    },
-                }
+                Vanilla::download(self).await
             }
-            Provider::Bukkit => todo!(),
-            Provider::Spigot => todo!(),
-            Provider::Paper => todo!(),
+            Provider::Paper => {
+                Paper::download(self).await
+            },
+            Provider::Folia => todo!(),
             Provider::Purpur => todo!(),
             Provider::Fabric => todo!(),
             Provider::Forge => todo!(),
@@ -114,6 +81,7 @@ impl<'config, 'lock> Downloader<'config, 'lock>{
         link: String,
         hash: ChooseHash,
     ) -> Result<(), DownloadErrors> {
+        self.lock.delete_core(&self.config.additions.path_to_core).await?;
         get_file(link, hash, &self.config.additions.path_to_core, name).await?;
         let meta = Meta::Core(MetaData::new(name.to_string(), self.config.core.version.clone()));
         self.lock.add(meta).await;
@@ -125,10 +93,6 @@ impl<'config, 'lock> Downloader<'config, 'lock>{
         todo!()
     }
 }
-
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 
 /// Get and write file by path
 async fn get_file(

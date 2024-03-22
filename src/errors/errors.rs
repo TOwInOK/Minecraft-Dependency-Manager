@@ -18,6 +18,12 @@ pub enum LockErrors {
     DeleteError(#[from] std::io::Error),
 }
 
+impl From<LockErrors> for DownloadErrors {
+    fn from(error: LockErrors) -> Self {
+        DownloadErrors::DownloadCorrupt(error.to_string())
+    }
+}
+
 #[derive(Error, Debug)]
 pub enum ConfigErrors {
     #[error("Загрузка файла не была успешна: {0}")]

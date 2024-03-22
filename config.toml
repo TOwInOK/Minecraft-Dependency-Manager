@@ -1,9 +1,10 @@
 [core]
     # Выбери один из вариантов: vanilla, spigot, bucket, paper, purpur, forge, neoForge, fabric
-    provider = "vanilla"
-    version = "latest"
+    provider = "paper"
+    version = "1.20.1"
+    # build = "459"
     # Замораживать ли объекты при наличии в системе
-    freeze = true
+    freeze = false
     force_update = false
 
 [plugins]

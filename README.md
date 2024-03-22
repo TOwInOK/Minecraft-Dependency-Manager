@@ -41,20 +41,17 @@
     - Modrinth
     - SpigotMC
     - Hangar
-    - Bukkit (mb cause it's same on other sites)
     - CurseForge (mb cause it's same on other sites)
   ## Mods
     - Modrinth
     - CurseForge
   ## Cores
-    - Bukkit
-    - Spigot
     - PaperMC
+    - Folia
     - PurpurMC
     - Fabric
     - Forge
     - NeoForge
-    - BungeeCord
     - Velocity
     - Waterflow
     
