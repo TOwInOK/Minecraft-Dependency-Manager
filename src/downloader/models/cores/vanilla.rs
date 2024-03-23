@@ -1,20 +1,9 @@
-use crate::config::lock::ExistState;
-use crate::config::lock::Meta;
-use crate::config::lock::MetaData;
-use crate::config::versions::Versions;
-use crate::downloader::hash::ChooseHash;
-use crate::downloader::Downloader;
-use crate::errors::errors::ConfigErrors;
-use crate::errors::errors::DownloadErrors;
-use log::debug;
+use crate::{config::versions::Versions, downloader::{hash::ChooseHash, models::model::ModelCore, Downloader}, errors::errors::{ConfigErrors, DownloadErrors}, lock::lock::{ExistState, Meta, MetaData}};use log::debug;
 use log::info;
 use log::trace;
 use log::warn;
 use serde::Deserialize;
 use serde::Serialize;
-
-use super::model::ModelCore;
-
 type OuterLink = String;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

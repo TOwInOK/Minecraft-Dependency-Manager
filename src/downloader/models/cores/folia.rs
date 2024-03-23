@@ -1,13 +1,10 @@
-use std::fmt::format;
-
-use log::{debug, info, trace};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
-use crate::{config::lock::{ExistState, Meta, MetaData}, downloader::{hash::ChooseHash, Downloader}, errors::errors::{ConfigErrors, DownloadErrors}};
 
-use super::model::ModelCore;
+use crate::{downloader::{hash::ChooseHash, models::model::ModelCore, Downloader}, errors::errors::{ConfigErrors, DownloadErrors}, lock::lock::{ExistState, Meta, MetaData}};
 
-pub enum Paper{}
+pub enum Folia{}
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,7 +32,7 @@ pub struct Application {
     pub sha256: String,
 }
 
-impl ModelCore for Paper {
+impl ModelCore for Folia {
     //find build and push link
     async fn find(version: &crate::config::versions::Versions, build: &str) -> Result<(String, ChooseHash), ConfigErrors> {
         let version = Self::find_version(version).await?;
@@ -88,10 +85,10 @@ impl ModelCore for Paper {
     }
 
     async fn download<'config, 'lock>(downloader: &mut Downloader<'config, 'lock>) -> Result<(), DownloadErrors> {
-        let core_name = "Paper";
+        let core_name = "Folia";
         info!("Find {}!", core_name);
         //Find version to download
-        let (link, hash) = Paper::find(&downloader.config.core.version, &downloader.config.core.build).await?;
+        let (link, hash) = Folia::find(&downloader.config.core.version, &downloader.config.core.build).await?;
 
         debug!("Find {} link: {}, hash: {}",core_name, &link, &hash);
         info!("Start to download core!");

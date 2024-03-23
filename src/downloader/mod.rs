@@ -5,15 +5,13 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use log::{debug, info};
-
-use self::{hash::ChooseHash, models::vanilla::Vanilla};
 use crate::{
     config::{
-        core::Provider, lock::{Lock, Meta, MetaData}, plugins::Sources, Config
-    },
-    downloader::models::{model::ModelCore, papermc::Paper},
-    errors::errors::DownloadErrors,
+        core::Provider, plugins::Sources, Config
+    }, downloader::models::{cores::{folia::Folia, paper::Paper, purpur::Purpur, vanilla::Vanilla, velocity::Velocity, waterfall::Waterfall}, model::ModelCore}, errors::errors::DownloadErrors, lock::lock::{Lock, Meta, MetaData}
 };
+
+use self::hash::ChooseHash;
 
 
 #[derive(Debug)]
@@ -39,17 +37,15 @@ impl<'config, 'lock> Downloader<'config, 'lock>{
     async fn check_core(&mut self) -> Result<(), DownloadErrors> {
         info!("Start to match provider of core");
         match &self.config.core.provider {
-            Provider::Vanilla => {
-                Vanilla::download(self).await
-            }
-            Provider::Paper => {
-                Paper::download(self).await
-            },
-            Provider::Folia => todo!(),
-            Provider::Purpur => todo!(),
+            Provider::Vanilla => Vanilla::download(self).await,
+            Provider::Paper => Paper::download(self).await,
+            Provider::Folia => Folia::download(self).await,
+            Provider::Purpur => Purpur::download(self).await,
             Provider::Fabric => todo!(),
             Provider::Forge => todo!(),
             Provider::NeoForge => todo!(),
+            Provider::Waterfall => Waterfall::download(self).await,
+            Provider::Velocity => Velocity::download(self).await,
         }
     }
     ///Check plugins and add it into list for download.
@@ -81,10 +77,15 @@ impl<'config, 'lock> Downloader<'config, 'lock>{
         link: String,
         hash: ChooseHash,
     ) -> Result<(), DownloadErrors> {
+        //delete all cores from meta and dir
         self.lock.delete_core(&self.config.additions.path_to_core).await?;
+        //download
         get_file(link, hash, &self.config.additions.path_to_core, name).await?;
+        //get meta data
         let meta = Meta::Core(MetaData::new(name.to_string(), self.config.core.version.clone()));
+        //push to lock
         self.lock.add(meta).await;
+        //save lock
         self.lock.save().await?;
         Ok(())
     }
@@ -106,6 +107,7 @@ async fn get_file(
 
     // Check hash
     if hash.calculate_hash(&*content).await {
+        info!("Hash same");
         let mut name = name.to_owned();
         name.push_str(".jar");
         let file_name = Path::new(&name); // Name of file

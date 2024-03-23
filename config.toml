@@ -1,7 +1,7 @@
 [core]
-    # Выбери один из вариантов: vanilla, spigot, bucket, paper, purpur, forge, neoForge, fabric
-    provider = "paper"
-    version = "1.20.1"
+    # Выбери один из вариантов: vanilla, spigot, bucket, paper, purpur, forge, neoForge, fabric, folia, waterfall, velocity
+    provider = "purpur"
+    version = "1.15"
     # build = "459"
     # Замораживать ли объекты при наличии в системе
     freeze = false

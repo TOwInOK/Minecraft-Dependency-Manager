@@ -1,4 +1,3 @@
+pub mod cores;
+pub mod plugins;
 pub mod model;
-pub mod modrinth;
-pub mod vanilla;
-pub mod papermc;

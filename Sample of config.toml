@@ -6,8 +6,8 @@
 
 # Секция ядра / Core section
 [core]
-    # Выбери один из вариантов: vanila, spigot, bucket, paper, purpur
-    # Choose one of the options: vanilla, spigot, bucket, paper, purpur
+    # Выбери один из вариантов: vanilla, spigot, bucket, paper, purpur, forge, neoForge, fabric, folia, waterfall, velocity
+    # Choose one of the options: vanilla, spigot, bucket, paper, purpur, forge, neoForge, fabric, folia, waterfall, velocity
     provider = "paper"
     # Версия сервера (например, "1.14.4" или специальный код)
     # Server version (e.g., "1.14.4" or a special code)

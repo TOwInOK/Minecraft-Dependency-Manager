@@ -3,9 +3,9 @@ use std::path::Path;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 
-use crate::errors::errors::{ConfigErrors, LockErrors};
+use crate::{config::versions::Versions, errors::errors::{ConfigErrors, LockErrors}};
 
-use super::versions::Versions;
+
 use tokio::{fs::{self, File}, io::AsyncWriteExt};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Default)]

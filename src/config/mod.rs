@@ -1,6 +1,5 @@
 pub mod additions;
 pub mod core;
-pub mod lock;
 pub mod plugins;
 pub mod versions;
 

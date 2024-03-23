@@ -1,6 +1,7 @@
 mod config;
 mod downloader;
 mod errors;
+mod lock;
 
 use std::time::Duration;
 
@@ -9,7 +10,9 @@ use downloader::Downloader;
 use log::{error, info, trace};
 use tokio::{task, time};
 
-use crate::config::lock::Lock;
+use crate::lock::lock::Lock;
+
+
 #[tokio::main]
 async fn main() {
     pretty_env_logger::formatted_builder()

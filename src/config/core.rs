@@ -23,11 +23,16 @@ pub struct Core {
 #[serde(rename_all = "lowercase")]
 pub enum Provider {
     #[default]
-    Vanilla,
-    Paper,
-    Folia,
-    Purpur,
-    Fabric,
-    Forge,
-    NeoForge,
+    Vanilla, // done
+    Paper,// done
+    Folia, // done
+    Purpur, // in work, good api
+    Fabric, // in work, api with out hash
+    //https://meta.fabricmc.net/v2/versions/game <- version check /v2/versions/intermediary give only stable
+    // or https://meta.fabricmc.net/v1/versions/game/1.14.4. Если нет версии, ответ пуст.
+
+    Forge, //no api
+    NeoForge, //worst api
+    Waterfall, // done
+    Velocity // done
 }

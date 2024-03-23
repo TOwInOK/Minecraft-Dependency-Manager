@@ -11,6 +11,7 @@ pub enum ChooseHash {
     SHA1(String),
     SHA256(String),
     MD5(String),
+    None,
 }
 
 impl ChooseHash {
@@ -52,6 +53,7 @@ impl ChooseHash {
                 let result = hashed.finalize();
                 e.eq(&format!("{:x}", result))
             }
+            ChooseHash::None => true,
         }
     }
 }
@@ -62,6 +64,7 @@ impl std::fmt::Display for ChooseHash {
             ChooseHash::SHA1(hash) => write!(f, "SHA1: {}", hash),
             ChooseHash::SHA256(hash) => write!(f, "SHA256: {}", hash),
             ChooseHash::MD5(hash) => write!(f, "MD5: {}", hash),
+            ChooseHash::None => write!(f, "None hash"),
         }
     }
 }
