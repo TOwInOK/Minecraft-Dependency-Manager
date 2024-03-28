@@ -1,4 +1,5 @@
 mod config;
+mod controller;
 mod downloader;
 mod errors;
 mod lock;
@@ -7,29 +8,16 @@ use std::time::Duration;
 
 use config::Config;
 use downloader::Downloader;
-use log::{error, info, trace};
+use log::error;
 use tokio::{task, time};
 
 use crate::lock::lock::Lock;
-
 
 #[tokio::main]
 async fn main() {
     pretty_env_logger::formatted_builder()
         .filter_level(log::LevelFilter::Trace)
         .init();
-
-    //Load lock
-    let lock = Lock::new();
-    let mut lock = match Lock::load().await {
-        Ok(e) => e,
-        Err(e) => {
-            error!("{e}");
-            lock.create().await.unwrap();
-            Lock::load().await.unwrap()
-        },
-    };
-        
 
     //Load Config file
     let path = "./config.toml".to_string();
@@ -39,6 +27,16 @@ async fn main() {
         Config::default()
     });
     log::debug!("{:#?}", config);
+
+    //Load lock
+    let mut lock = Lock::new();
+    if let Err(e) = lock.load(&config.additions.path_to_configs).await {
+        error!("{e}");
+        lock.create(&config.additions.path_to_configs)
+            .await
+            .unwrap();
+        lock.load(&config.additions.path_to_configs).await.unwrap();
+    }
 
     // Запускаем проверку.
     let downloader_checker = task::spawn(async move {

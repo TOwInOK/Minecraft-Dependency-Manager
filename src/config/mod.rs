@@ -3,7 +3,7 @@ pub mod core;
 pub mod plugins;
 pub mod versions;
 
-use crate::errors::errors::ConfigErrors;
+use crate::errors::error::ConfigErrors;
 use additions::Additions;
 use core::Core;
 use log::info;

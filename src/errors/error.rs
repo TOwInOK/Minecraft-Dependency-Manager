@@ -68,7 +68,7 @@ impl From<reqwest::Error> for DownloadErrors {
         DownloadErrors::DownloadCorrupt(value.to_string())
     }
 }
-
+#[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum CompareHashError {
     #[error("Конвертация Sha1 проведена не успешно : {0}")]

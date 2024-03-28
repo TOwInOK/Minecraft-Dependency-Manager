@@ -15,19 +15,24 @@ pub struct Additions {
     pub path_to_mods: String,
     #[serde(default = "plugins")]
     pub path_to_plugins: String,
+    #[serde(default = "lock")]
+    pub path_to_lock: String,
     #[serde(default = "configs")]
     pub path_to_configs: String,
 }
 
 fn core() -> String {
-    "./core".to_string()
+    "core".to_string()
 }
 fn mods() -> String {
-    "./mods".to_string()
+    "mods".to_string()
 }
 fn plugins() -> String {
-    "./plugins".to_string()
+    "plugins".to_string()
 }
 fn configs() -> String {
-    "./configs".to_string()
+    "configs.toml".to_string()
+}
+fn lock() -> String {
+    "config.lock".to_string()
 }

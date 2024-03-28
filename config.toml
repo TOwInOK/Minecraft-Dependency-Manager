@@ -1,8 +1,8 @@
 [core]
-    # Выбери один из вариантов: vanilla, spigot, bucket, paper, purpur, forge, neoForge, fabric, folia, waterfall, velocity
-    provider = "purpur"
-    version = "1.15"
-    # build = "459"
+    # Выбери один из вариантов: vanilla, paper, purpur, forge, neoForge, fabric, folia, waterfall, velocity
+    provider = "paper"
+    version = "1.20.4"
+    # build = "2160"
     # Замораживать ли объекты при наличии в системе
     freeze = false
     force_update = false
@@ -24,3 +24,7 @@
 [additions]
 configPluguinsFrom = "git@github.com:TOwInOK/test.git"
 key = "SUPEREKLy"
+path_to_core = "core/"
+# path_to_mods = ""
+# path_to_plugins = ""
+path_to_configs = "D:/Rust/MinecraftAddonController/config.lock"

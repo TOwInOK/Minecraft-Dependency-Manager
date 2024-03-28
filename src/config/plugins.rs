@@ -1,4 +1,5 @@
 use crate::config::Versions;
+use log::info;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
@@ -23,12 +24,11 @@ pub struct Plugin {
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Sources {
-    Bukkit,
-    Spigot,
-    Hangar,
+    Spigot, // bad api
+    Hangar, // ?
     #[default]
-    Modrinth,
-    CurseForge,
+    Modrinth, // Favorite
+    CurseForge, // ?
 }
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
@@ -38,4 +38,14 @@ pub enum Channels {
     Stable,
     Beta,
     Alpha,
+}
+
+impl Plugin {
+    pub async fn freeze(&self) -> bool {
+        info!("Check freeze and force_update");
+        if self.freeze && !self.force_update {
+            return true;
+        };
+        false
+    }
 }

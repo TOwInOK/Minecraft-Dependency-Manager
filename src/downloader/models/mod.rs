@@ -1,3 +1,3 @@
 pub mod cores;
-pub mod plugins;
 pub mod model;
+pub mod plugins;
