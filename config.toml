@@ -8,18 +8,22 @@
     force_update = false
 
 [plugins]
-    [plugins.simple_voice_chat2]
-    version = "ail5iPUK"
+    [plugins.simple-voice-chat]
+    [plugins.chunky]
+    [plugins.itemswapper]
+    [plugins.terra]
     channel = "beta"
-    freeze = false
-    update = false
+    # version = "ail5iPUK"
+    # channel = "beta"
+    # freeze = false
+    # update = false
 
-    [plugins.cooler2]
-    source = "hangar"
-    version = "ail5iPUK"
-    channel = "beta"
-    freeze = false
-    update = true
+    # [plugins.cooler2]
+    # source = "hangar"
+    # version = "ail5iPUK"
+    # channel = "beta"
+    # freeze = false
+    # update = true
 
 [additions]
 configPluguinsFrom = "git@github.com:TOwInOK/test.git"

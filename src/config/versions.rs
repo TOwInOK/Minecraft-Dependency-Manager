@@ -1,9 +1,26 @@
+use std::ops::Deref;
+
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[derive(Debug, Default, PartialEq, Clone, Eq)]
 pub enum Versions {
     Version(String),
     #[default]
     Latest,
+}
+
+impl Versions {
+    pub async fn is_latest(&self) -> bool {
+        match self {
+            Versions::Version(_) => false,
+            Versions::Latest => true,
+        }
+    }
+    pub async fn get_version(&self) -> &str {
+        match self {
+            Versions::Version(e) => e.deref(),
+            Versions::Latest => "latest",
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for Versions {

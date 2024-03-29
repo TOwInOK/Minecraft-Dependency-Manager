@@ -37,7 +37,7 @@ pub struct FileHash {
 
 impl ModelCore for Purpur {
     //find build and push link
-    async fn find(core: &mut Core) -> Result<(String, ChooseHash), DownloadErrors> {
+    async fn get_link(core: &mut Core) -> Result<(String, ChooseHash), DownloadErrors> {
         let version = &core.version;
         let version = Self::find_version(version).await?;
         let build = &mut core.build;

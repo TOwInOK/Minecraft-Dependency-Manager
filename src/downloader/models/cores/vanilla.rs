@@ -81,7 +81,7 @@ pub struct Server {
 
 impl ModelCore for Vanilla {
     /// Making request to mojang api and find the link to download minecraft.jar
-    async fn find(core: &mut Core) -> Result<(OuterLink, ChooseHash), DownloadErrors> {
+    async fn get_link(core: &mut Core) -> Result<(OuterLink, ChooseHash), DownloadErrors> {
         let version = &core.version;
         info!("Start find fn with version: {:#?}", version);
         let link = Self::find_version(version).await?;

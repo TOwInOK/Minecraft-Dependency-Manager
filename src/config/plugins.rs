@@ -35,9 +35,19 @@ pub enum Sources {
 #[serde(rename_all = "lowercase")]
 pub enum Channels {
     #[default]
-    Stable,
+    Release,
     Beta,
     Alpha,
+}
+
+impl Channels {
+    pub async fn get_str(&self) -> &str {
+        match self {
+            Channels::Release => "release",
+            Channels::Beta => "beta",
+            Channels::Alpha => "alpha",
+        }
+    }
 }
 
 impl Plugin {

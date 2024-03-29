@@ -44,7 +44,7 @@ pub struct Application {
 
 impl<T: ModelCorePaperFamily> ModelCore for T {
     //find build and push link
-    async fn find(core: &mut Core) -> Result<(String, ChooseHash), DownloadErrors> {
+    async fn get_link(core: &mut Core) -> Result<(String, ChooseHash), DownloadErrors> {
         let core_name = Self::CORE_NAME;
         let build = &mut core.build;
         let version = &core.version;

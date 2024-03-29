@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use log::{debug, error, info};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -156,7 +156,6 @@ impl Lock {
         self.meta_data.iter().find(|m| {
             m.get_name() == outer_meta.get_name()
                 && m.get_version() == outer_meta.get_version()
-                && m.get_dependencies() != outer_meta.get_dependencies()
         })
     }
 
@@ -183,7 +182,7 @@ impl Lock {
     ///Delete plugin
     pub async fn delete_plugin(
         &mut self,
-        name: String,
+        name: &str,
         download_dir: &str,
     ) -> Result<(), LockErrors> {
         match self
@@ -287,16 +286,6 @@ impl Meta {
             Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.set_build(build),
         }
     }
-    pub fn get_dependencies(&self) -> Option<&Vec<String>> {
-        match self {
-            Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.get_dependencies(),
-        }
-    }
-    pub fn set_dependencies(&mut self, deps: Option<Vec<String>>) {
-        match self {
-            Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.set_dependencies(deps),
-        }
-    }
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Eq)]
@@ -304,7 +293,6 @@ pub struct MetaData {
     pub name: String,
     pub version: Versions,
     pub build: Option<String>,
-    pub dependencies: Option<Vec<String>>,
 }
 
 impl MetaData {
@@ -312,13 +300,11 @@ impl MetaData {
         name: String,
         version: Versions,
         build: Option<String>,
-        dependencies: Option<Vec<String>>,
     ) -> Self {
         Self {
             name,
             version,
             build,
-            dependencies,
         }
     }
 
@@ -344,11 +330,5 @@ impl MetaData {
 
     pub fn set_build(&mut self, build: Option<String>) {
         self.build = build;
-    }
-    pub fn get_dependencies(&self) -> Option<&Vec<String>> {
-        self.dependencies.as_ref()
-    }
-    pub fn set_dependencies(&mut self, deps: Option<Vec<String>>) {
-        self.dependencies = deps;
     }
 }

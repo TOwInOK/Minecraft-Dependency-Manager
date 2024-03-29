@@ -4,3 +4,27 @@
 name = "Paper"
 version = "1.20.4"
 build = "462"
+
+[[metaData]]
+
+[metaData.Plugin]
+name = "simple-voice-chat"
+version = "latest"
+
+[[metaData]]
+
+[metaData.Plugin]
+name = "chunky"
+version = "latest"
+
+[[metaData]]
+
+[metaData.Plugin]
+name = "terra"
+version = "latest"
+
+[[metaData]]
+
+[metaData.Plugin]
+name = "itemswapper"
+version = "latest"

@@ -3,6 +3,7 @@ mod models;
 
 use crate::config::core::Provider;
 use crate::config::plugins::{Plugin, Sources};
+use crate::config::versions::Versions;
 use crate::config::Config;
 use crate::downloader::models::cores::folia::Folia;
 use crate::downloader::models::cores::paper::Paper;
@@ -20,6 +21,8 @@ use std::io::Write;
 use std::path::Path;
 
 use self::hash::ChooseHash;
+use self::models::extensions::modrinth::ModrinthData;
+use self::models::model::ModelExtensions;
 
 #[derive(Debug)]
 pub struct Downloader<'config, 'lock> {
@@ -29,29 +32,31 @@ pub struct Downloader<'config, 'lock> {
 
 impl<'config, 'lock> Downloader<'config, 'lock> {
     pub fn new(config: &'config mut Config, lock: &'lock mut Lock) -> Self {
-        Self { config, lock }
+        Self { config, lock}
     }
 
     ///Check and download plugins, mods, core
-    pub async fn check(&mut self) -> Result<(), DownloadErrors> {
+    pub async fn check_and_download(&mut self) -> Result<(), DownloadErrors> {
         info!("Start check fn");
-        self.core_reqwest().await
-        // self.plugin_reqwest().await
+        self.core_reqwest().await?;
+        self.plugin_reqwest().await
     }
+
+    /////Core section
 
     ///Check core and add it into list for download.
     async fn get_core_link(&mut self) -> Result<(String, ChooseHash), DownloadErrors> {
         info!("Start to match provider of core");
         match &self.config.core.provider {
-            Provider::Vanilla => Vanilla::find(&mut self.config.core).await,
-            Provider::Paper => Paper::find(&mut self.config.core).await,
-            Provider::Folia => Folia::find(&mut self.config.core).await,
-            Provider::Purpur => Purpur::find(&mut self.config.core).await,
+            Provider::Vanilla => Vanilla::get_link(&mut self.config.core).await,
+            Provider::Paper => Paper::get_link(&mut self.config.core).await,
+            Provider::Folia => Folia::get_link(&mut self.config.core).await,
+            Provider::Purpur => Purpur::get_link(&mut self.config.core).await,
             Provider::Fabric => todo!(),
             Provider::Forge => todo!(),
             Provider::NeoForge => todo!(),
-            Provider::Waterfall => Waterfall::find(&mut self.config.core).await,
-            Provider::Velocity => Velocity::find(&mut self.config.core).await,
+            Provider::Waterfall => Waterfall::get_link(&mut self.config.core).await,
+            Provider::Velocity => Velocity::get_link(&mut self.config.core).await,
         }
     }
 
@@ -69,7 +74,6 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
                 name: core_name.to_string(),
                 version: self.config.core.version.clone(),
                 build: self.config.core.build.clone().into(),
-                dependencies: None,
             }))
             .await
         {
@@ -77,7 +81,7 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
                 if self.config.core.freeze().await {
                     return Ok(());
                 }
-                Self::force_update(self, core_name, link, hash).await
+                Self::core_force_update(self, core_name, link, hash).await
             }
             ExistState::DifferentVersion | ExistState::DifferentBuild => {
                 if self.config.core.freeze().await {
@@ -93,7 +97,7 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
         }
     }
 
-    async fn force_update(
+    async fn core_force_update(
         &mut self,
         core_name: &str,
         link: String,
@@ -126,7 +130,6 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
             name.to_string(),
             self.config.core.version.clone(),
             self.config.core.build.clone().into(),
-            None,
         ));
         //push to lock
         self.lock.add(meta).await;
@@ -135,29 +138,54 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
         Ok(())
     }
 
+    ///////Plugin Section
+
     /// Make reqwest to check version and download [`Plugin`].
     async fn plugin_reqwest(&mut self) -> Result<(), DownloadErrors> {
         if self.config.plugins.is_empty() {
             return Ok(());
         };
-        for (name, plugin) in self.config.plugins.iter_mut() {
+        for (name, plugin) in self.config.plugins.iter_mut().map(|(name, plugin)| {
+            return (name.to_lowercase().replace("_", "-"), plugin);
+        }) {
             if plugin.freeze().await {
                 continue;
             }
-            let (link, hash) = Self::get_plugin_link(name, plugin).await?;
+            let (link, hash) = Self::get_plugin_link(&name, plugin, &self.config.core.version, &self.config.core.provider.get_name().await.to_lowercase()).await?;
+            let plugin_meta = Meta::Plugin(MetaData {
+                name: name.to_string(),
+                version: plugin.version.clone(),
+                build: None,
+            });
 
             // Check exist plugin.
-            // match self
-            // .lock
-            // .exist(&Meta::Plugin(MetaData {
-            //     name: core_name.to_string(),
-            //     version: self.config.core.version.clone(),
-            //     build: self.config.core.build.clone().into(),
-            //     dependencies: None,
-            // }))
-            // .await? {}
-            //
-            Self::download_plugin(self.lock, name, plugin).await? // use it inside
+            match self
+            .lock
+            .exist(&plugin_meta)
+            .await {
+                ExistState::Exist => {
+                    if plugin.freeze().await {
+                        return Ok(());
+                    }
+                    // Download force update
+                    if plugin.force_update {
+                        info!("Plugin: {}. Force download!", name);
+                        Self::download_plugin(self.lock,&self.config.additions.path_to_plugins, &self.config.additions.path_to_configs, &name, link, hash, plugin_meta).await?
+                    }
+                    info!("Plugin: {}. Does't need to update", name);
+                }
+                ExistState::DifferentVersion | ExistState::DifferentBuild => {
+                    if plugin.freeze().await {
+                        return Ok(());
+                    }
+                    info!("Plugin: {}. Need tp update", name);
+                    Self::download_plugin(self.lock,&self.config.additions.path_to_plugins, &self.config.additions.path_to_configs, &name, link, hash, plugin_meta).await?
+                }
+                ExistState::None => {
+                    info!("No one plugin: {} find, Download!", name);
+                    Self::download_plugin(self.lock,&self.config.additions.path_to_plugins, &self.config.additions.path_to_configs, &name, link, hash, plugin_meta).await?
+                }
+            }
         }
         Ok(())
     }
@@ -165,21 +193,35 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
     /// download plugin
     async fn download_plugin(
         lock: &mut Lock,
+        path_plugin: &str,
+        path_lock: &str,
         name: &str,
-        plugin: &Plugin,
+        link: String,
+        hash: ChooseHash,
+        meta: Meta,
     ) -> Result<(), DownloadErrors> {
-        todo!()
+        //Delete plugin
+        lock.delete_plugin(name, path_plugin).await?;
+        //download plugin
+        get_file(link, hash, path_plugin, name).await?;
+        //push to lock
+        lock.add(meta).await;
+        //save lock
+        lock.save(path_lock).await?;
+        Ok(())
     }
 
     ///Check plugins and add it into list for download.
     async fn get_plugin_link(
         name: &str,
         plugin: &Plugin,
+        game_version: &Versions,
+        loader: &str,
     ) -> Result<(String, ChooseHash), DownloadErrors> {
         match plugin.source {
             Sources::Spigot => todo!(),
             Sources::Hangar => todo!(),
-            Sources::Modrinth => todo!(),
+            Sources::Modrinth => ModrinthData::get_link(name, plugin, game_version, loader).await,
             Sources::CurseForge => todo!(),
         }
     }

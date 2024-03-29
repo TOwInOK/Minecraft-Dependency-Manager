@@ -45,7 +45,7 @@ async fn main() {
         loop {
             interval.tick().await;
             Downloader::new(&mut config, &mut lock)
-                .check()
+                .check_and_download()
                 .await
                 .unwrap_or_else(|e| error!("{e}"));
         }
