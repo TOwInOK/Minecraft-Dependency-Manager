@@ -1,12 +1,5 @@
 [[metaData]]
 
-[metaData.Core]
-name = "Paper"
-version = "1.20.4"
-build = "462"
-
-[[metaData]]
-
 [metaData.Plugin]
 name = "simple-voice-chat"
 version = "latest"
@@ -28,3 +21,10 @@ version = "latest"
 [metaData.Plugin]
 name = "itemswapper"
 version = "latest"
+
+[[metaData]]
+
+[metaData.Core]
+name = "Paper"
+version = "1.18"
+build = "66"

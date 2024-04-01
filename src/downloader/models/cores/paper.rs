@@ -1,4 +1,4 @@
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -45,6 +45,7 @@ pub struct Application {
 impl<T: ModelCorePaperFamily> ModelCore for T {
     //find build and push link
     async fn get_link(core: &mut Core) -> Result<(String, ChooseHash), DownloadErrors> {
+        debug!("Start Get link");
         let core_name = Self::CORE_NAME;
         let build = &mut core.build;
         let version = &core.version;
@@ -97,6 +98,7 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
     async fn find_version(
         version: &crate::config::versions::Versions,
     ) -> Result<String, DownloadErrors> {
+        debug!("Start find Version");
         let link = format!("https://api.papermc.io/v2/projects/{}", Self::CORE_NAME);
         let verlist: VersionList = reqwest::get(link).await?.json().await?;
         let verlist = verlist.versions;
