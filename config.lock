@@ -1,30 +1,17 @@
-[[metaData]]
+[core]
+name = "purpur"
+version = "1.20.4"
+build = "2165"
+path = "core/purpur.jar"
 
-[metaData.Plugin]
-name = "simple-voice-chat"
-version = "latest"
+[plugins.itemswapper]
+version = "UKVc6pCj"
+path = "plugins/itemswapper.jar"
 
-[[metaData]]
+[plugins.chunky]
+version = "iwsbfPGg"
+path = "plugins/chunky.jar"
 
-[metaData.Plugin]
-name = "chunky"
-version = "latest"
-
-[[metaData]]
-
-[metaData.Plugin]
-name = "terra"
-version = "latest"
-
-[[metaData]]
-
-[metaData.Plugin]
-name = "itemswapper"
-version = "latest"
-
-[[metaData]]
-
-[metaData.Core]
-name = "Paper"
-version = "1.18"
-build = "66"
+[plugins.simple-voice-chat]
+version = "WvPmSPnl"
+path = "plugins/simple-voice-chat.jar"

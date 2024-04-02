@@ -16,6 +16,8 @@ impl From<std::io::Error> for DownloadErrors {
 pub enum LockErrors {
     #[error("Ошибка удаление файла: {0}")]
     DeleteError(#[from] std::io::Error),
+    #[error("Не удалось найти: {0}")]
+    NotFound(String),
 }
 
 impl From<LockErrors> for DownloadErrors {

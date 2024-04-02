@@ -1,4 +1,3 @@
-use crate::config::Versions;
 use log::info;
 use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
@@ -8,10 +7,10 @@ pub struct Core {
     pub provider: Provider,
     // Версия ядра
     #[serde(default)]
-    pub version: Versions,
+    pub version: Option<String>,
     // Версия билда ядра
     #[serde(default)]
-    pub build: String,
+    pub build: Option<String>,
     // Приостановить обновление
     #[serde(default)]
     pub freeze: bool,
@@ -38,17 +37,17 @@ pub enum Provider {
 }
 
 impl Provider {
-    pub async fn get_name(&self) -> String {
+    pub async fn get_name(&self) -> &'static str {
         match self {
-            Provider::Vanilla => "Vanilla".to_owned(),
-            Provider::Paper => "Paper".to_owned(),
-            Provider::Folia => "Folia".to_owned(),
-            Provider::Purpur => "Purpur".to_owned(),
-            Provider::Fabric => "Fabric".to_owned(),
-            Provider::Forge => "Forge".to_owned(),
-            Provider::NeoForge => "NeoForge".to_owned(),
-            Provider::Waterfall => "Waterfall".to_owned(),
-            Provider::Velocity => "Velocity".to_owned(),
+            Provider::Vanilla => "vanilla",
+            Provider::Paper => "paper",
+            Provider::Folia => "folia",
+            Provider::Purpur => "purpur",
+            Provider::Fabric => "fabric",
+            Provider::Forge => "forge",
+            Provider::NeoForge => "neoforge",
+            Provider::Waterfall => "waterfall",
+            Provider::Velocity => "velocity",
         }
     }
 }

@@ -7,7 +7,7 @@ use crate::{config::Config, downloader::Downloader, lock::lock::Lock};
 
 pub struct Controller {
     config: Mutex<Config>,
-    lock:  Mutex<Lock>,
+    lock: Mutex<Lock>,
 }
 
 impl Controller {
@@ -19,7 +19,8 @@ impl Controller {
 
     async fn new() -> Self {
         // Load Config file
-        let path = "./config.toml".to_string();
+        let path =
+            "/Users/dmitryfefilov/Documents/Rust/MinecraftAddonController/config.toml".to_string();
         let config = Config::load_config(path).await.unwrap_or_else(|e| {
             log::error!("message: {}", e);
             log::warn!("Происходит загрузка стандартного конфига");
@@ -27,7 +28,7 @@ impl Controller {
         });
 
         // Load lock
-        let mut lock = Lock::new();
+        let mut lock = Lock::default();
         if let Err(e) = lock.load(&config.additions.path_to_configs).await {
             error!("{e}");
             lock.create(&config.additions.path_to_configs)
@@ -44,7 +45,7 @@ impl Controller {
 
     async fn run(&mut self) {
         // let sleep_cooldown = self.config.lock().await.additions.time_to_await;
-        let cooldown = 10;
+        let cooldown = 100;
         loop {
             info!("Start checking and download");
             self.start().await;
@@ -73,16 +74,18 @@ impl Controller {
             Config::default()
         });
         log::debug!("{:#?}", config);
-    
+
         // Load new lock
-        let mut lock = Lock::new();
+        let mut lock = Lock::default();
         if let Err(e) = lock.load(&config.additions.path_to_configs).await {
             error!("{e}");
             lock.create(&config.additions.path_to_configs)
                 .await
                 .unwrap();
-            lock.load(&config.additions.path_to_configs).await.unwrap_or_else(|e| error!("{e}"));
-        }    
+            lock.load(&config.additions.path_to_configs)
+                .await
+                .unwrap_or_else(|e| error!("{e}"));
+        }
         self.lock = lock.into();
         self.config = config.into();
     }

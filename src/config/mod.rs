@@ -1,7 +1,6 @@
 pub mod additions;
 pub mod core;
 pub mod plugins;
-pub mod versions;
 
 use crate::errors::error::ConfigErrors;
 use additions::Additions;
@@ -11,7 +10,6 @@ use plugins::Plugin;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::fs;
-use versions::Versions;
 /// Структура для инициализации конфигурации
 ///
 #[derive(Deserialize, Serialize, Debug, Default)]

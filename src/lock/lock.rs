@@ -1,10 +1,14 @@
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashMap,
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::versions::Versions,
+    config::core::{Core, Provider},
     errors::error::{ConfigErrors, LockErrors},
 };
 
@@ -16,16 +20,25 @@ use tokio::{
 #[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Lock {
-    pub meta_data: Vec<Meta>,
+    core: CoreMetaData,
+    plugins: HashMap<String, ExtensionMetaData>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+struct CoreMetaData {
+    name: Provider,
+    version: Option<String>,
+    build: Option<String>,
+    path: String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+struct ExtensionMetaData {
+    version: String,
+    path: String,
 }
 
 impl Lock {
-    pub fn new() -> Self {
-        Self {
-            meta_data: Vec::<Meta>::new(),
-        }
-    }
-
     /// Load lock from the specified file path
     pub async fn load(&mut self, path: &str) -> Result<(), ConfigErrors> {
         if !self.check_path(path).await {
@@ -124,7 +137,6 @@ impl Lock {
 
         // info!("Flush lock");
         // file.flush().await?;
-        // info!("{:#?}", self.meta_data);
 
         file.write_all(toml_content.as_bytes()).await?;
         info!("Lock file content written successfully.");
@@ -133,102 +145,72 @@ impl Lock {
     }
 
     ///Exist this item?
-    pub async fn exist(&self, outer_meta: &Meta) -> ExistState {
-        if self.meta_data.contains(outer_meta) {
+    pub async fn exist_plugin(&self, name: &str, version: &str) -> ExistState {
+        if self.plugins.contains_key(name) {
             return ExistState::Exist;
         }
-        if self.find_different_version(outer_meta).is_some() {
+        if self.plugins.contains_key(name)
+            && self
+                .plugins
+                .get(name)
+                .map_or(false, |x| x.version == version)
+        {
             return ExistState::DifferentVersion;
         }
-        if self.find_different_build(outer_meta).is_some() {
+
+        ExistState::None
+    }
+
+    pub async fn exist_core(&self, core: &Core, build: &str) -> ExistState {
+        if self.core.name == core.provider
+            && self.core.version == core.version
+            && self.core.build == Some(build.to_owned())
+        {
+            return ExistState::Exist;
+        }
+        if self.core.version == core.version {
+            return ExistState::DifferentVersion;
+        }
+        if self.core.build == core.build {
             return ExistState::DifferentBuild;
         }
         ExistState::None
     }
 
-    fn find_different_version(&self, outer_meta: &Meta) -> Option<&Meta> {
-        self.meta_data.iter().find(|m| {
-            m.get_name() == outer_meta.get_name() && m.get_version() != outer_meta.get_version()
-        })
-    }
-
-    fn find_different_build(&self, outer_meta: &Meta) -> Option<&Meta> {
-        self.meta_data.iter().find(|m| {
-            m.get_name() == outer_meta.get_name()
-                && m.get_version() == outer_meta.get_version()
-        })
-    }
-
     /// Delete all core items from meta_data
     /// cause only one core can exist in one time
-    pub async fn delete_core(&mut self, download_dir: &str) -> Result<(), LockErrors> {
-        match self
-            .meta_data
-            .iter()
-            .position(|item| matches!(item, Meta::Core(_)))
-        {
-            Some(index) => {
-                let core_name = self.meta_data[index].get_name().to_owned();
-                debug!("Core_name: {}", core_name);
-
-                self.meta_data.remove(index); // Удаление ядра из вектора meta_data
-
-                // Удаление файла, связанного с ядром
-                delete_file(&core_name, download_dir).await
-            }
-            None => Ok(()),
-        }
+    pub async fn delete_core(&mut self) -> Result<(), LockErrors> {
+        delete_file_by_path(&self.core.path).await
     }
     ///Delete plugin
-    pub async fn delete_plugin(
-        &mut self,
-        name: &str,
-        download_dir: &str,
-    ) -> Result<(), LockErrors> {
-        match self
-            .meta_data
-            .iter()
-            .position(|item| matches!(item, Meta::Plugin(e) if e.name == name))
-        {
-            Some(index) => {
-                self.meta_data.remove(index);
-                delete_file(&name, download_dir).await
-            }
-            None => Ok(()),
+    pub async fn delete_plugin(&mut self, name: &str) -> Result<(), LockErrors> {
+        match self.plugins.remove(name) {
+            Some(e) => delete_file_by_path(&e.path).await,
+            None => Err(LockErrors::NotFound(name.to_string())),
         }
     }
 
-    ///Delete mod
-    pub async fn _delete_mod(
-        &mut self,
-        name: String,
-        download_dir: &str,
-    ) -> Result<(), LockErrors> {
-        match self
-            .meta_data
-            .iter()
-            .position(|item| matches!(item, Meta::Mod(e) if e.name == name))
-        {
-            Some(index) => {
-                self.meta_data.remove(index);
-                delete_file(&name, download_dir).await
-            }
-            None => Ok(()),
+    /// Converting [`Core`] to [`CoreMetaData`] and change values of core in [`Lock`]
+    ///
+    /// Need to clone [`Core`]
+    pub async fn core_edit(&mut self, core: Core, path: String, build: String) {
+        self.core = CoreMetaData {
+            name: core.provider,
+            version: core.version,
+            build: Some(build),
+            path,
         }
     }
 
-    ///add item
-    pub async fn add(&mut self, meta: Meta) {
-        self.meta_data.push(meta)
-    }
-    /// Update item
-    pub async fn update(&mut self, updated_meta: Meta) {
-        match self.exist(&updated_meta).await {
-            ExistState::Exist => todo!(),
-            ExistState::DifferentVersion => todo!(),
-            ExistState::DifferentBuild => todo!(),
-            ExistState::None => todo!(),
-        }
+    /// Push key: String, value: Version from plugin
+    /// Path where plugin exist
+    pub async fn plugin_add(&mut self, name: String, version: String, path_to_dir: &str) {
+        let path = format!("{}/{}.jar", path_to_dir, &name);
+        debug!("FN Plugin_add: path: {}", &path);
+        let extension = ExtensionMetaData { version, path };
+        debug!("FN Plugin_add: Extension: {:#?}", &extension);
+        self.plugins.insert(name, extension);
+        debug!("FN Plugin_add: self.plugins: {:#?}", &self.plugins);
     }
 }
 
@@ -238,97 +220,19 @@ async fn delete_file(name: &str, download_dir: &str) -> Result<(), LockErrors> {
     debug!("file_path: {:#?}", file_path);
     fs::remove_file(&file_path).await.map_err(|e| e.into())
 }
+
+async fn delete_file_by_path(path: &str) -> Result<(), LockErrors> {
+    if path.is_empty() {
+        Ok(())
+    } else {
+        let path = OsStr::new(path);
+        debug!("file_path: {:#?}", path);
+        fs::remove_file(path).await.map_err(|e| e.into())
+    }
+}
 pub enum ExistState {
     Exist,
     DifferentVersion,
     DifferentBuild,
     None,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Eq)]
-pub enum Meta {
-    Core(MetaData),
-    Plugin(MetaData),
-    Mod(MetaData),
-}
-impl Meta {
-    fn get_version(&self) -> &Versions {
-        match self {
-            Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.get_version(),
-        }
-    }
-
-    fn set_version(&mut self, version: Versions) {
-        match self {
-            Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.set_version(version),
-        };
-    }
-
-    fn get_name(&self) -> &str {
-        match self {
-            Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.get_name(),
-        }
-    }
-
-    fn set_name(&mut self, name: String) {
-        match self {
-            Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.set_name(name),
-        };
-    }
-    pub fn get_build(&self) -> Option<&str> {
-        match self {
-            Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.get_build(),
-        }
-    }
-
-    pub fn set_build(&mut self, build: Option<String>) {
-        match self {
-            Meta::Core(e) | Meta::Plugin(e) | Meta::Mod(e) => e.set_build(build),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Eq)]
-pub struct MetaData {
-    pub name: String,
-    pub version: Versions,
-    pub build: Option<String>,
-}
-
-impl MetaData {
-    pub fn new(
-        name: String,
-        version: Versions,
-        build: Option<String>,
-    ) -> Self {
-        Self {
-            name,
-            version,
-            build,
-        }
-    }
-
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
-
-    pub fn get_version(&self) -> &Versions {
-        &self.version
-    }
-
-    pub fn set_version(&mut self, version: Versions) {
-        self.version = version;
-    }
-
-    pub fn get_build(&self) -> Option<&str> {
-        self.build.as_deref()
-    }
-
-    pub fn set_build(&mut self, build: Option<String>) {
-        self.build = build;
-    }
 }

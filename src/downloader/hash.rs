@@ -15,7 +15,7 @@ pub enum ChooseHash {
 }
 
 impl ChooseHash {
-    pub async fn calculate_hash(self, mut reader: impl tokio::io::AsyncRead + Unpin) -> bool {
+    pub async fn calculate_hash(&self, mut reader: impl tokio::io::AsyncRead + Unpin) -> bool {
         match self {
             ChooseHash::SHA1(e) => {
                 let mut hashed = <Sha1 as Digest1>::new();

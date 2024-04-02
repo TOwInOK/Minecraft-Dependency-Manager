@@ -44,11 +44,13 @@ pub struct Application {
 
 impl<T: ModelCorePaperFamily> ModelCore for T {
     //find build and push link
-    async fn get_link(core: &mut Core) -> Result<(String, ChooseHash), DownloadErrors> {
+    async fn get_link(core: &Core) -> Result<(String, ChooseHash, String), DownloadErrors> {
         debug!("Start Get link");
         let core_name = Self::CORE_NAME;
-        let build = &mut core.build;
-        let version = &core.version;
+        //get data from core
+        let build = core.build.as_deref();
+        let version = core.version.as_deref();
+        //find link and version
         let version = Self::find_version(version).await?;
         let verlink = format!(
             "https://api.papermc.io/v2/projects/{}/versions/{}",
@@ -56,56 +58,58 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
         );
         info!("Get BuildList");
         let build_list: BuildList = reqwest::get(verlink).await?.json().await?;
-        let build_list = build_list.builds;
-        if !build.is_empty() {
-            let build: u16 = build.parse().unwrap();
-            if build_list.contains(&build) {
-                info!("Find build, download");
+        let build_list = build_list.builds.as_slice();
+        match build {
+            Some(e) => {
+                let build: u16 = e.parse().unwrap();
+                if build_list.contains(&build) {
+                    info!("Find build, download");
+                    let buildlink = format!(
+                        "https://api.papermc.io/v2/projects/{}/versions/{}/builds/{}",
+                        core_name, version, build
+                    );
+                    info!("Get Url");
+                    let url: Url = reqwest::get(&buildlink).await?.json().await?;
+                    Ok((
+                        format!("{}/downloads/{}", buildlink, url.downloads.application.name),
+                        ChooseHash::SHA256(url.downloads.application.sha256),
+                        e.to_owned(),
+                    ))
+                } else {
+                    Err(DownloadErrors::DownloadCorrupt(format!(
+                        "No one build like: {} find",
+                        build
+                    )))
+                }
+            }
+            None => {
+                info!("Download latest build");
+                let lastbuild = build_list.last().unwrap();
+                info!("Get Url");
                 let buildlink = format!(
                     "https://api.papermc.io/v2/projects/{}/versions/{}/builds/{}",
-                    core_name, version, build
+                    core_name, version, lastbuild
                 );
-                info!("Get Url");
                 let url: Url = reqwest::get(&buildlink).await?.json().await?;
                 Ok((
                     format!("{}/downloads/{}", buildlink, url.downloads.application.name),
                     ChooseHash::SHA256(url.downloads.application.sha256),
+                    lastbuild.to_string(),
                 ))
-            } else {
-                Err(DownloadErrors::DownloadCorrupt(format!(
-                    "No one build like: {} find",
-                    build
-                )))
             }
-        } else {
-            info!("Download latest build");
-            let lastbuild = build_list.last().unwrap().to_string();
-            *build = lastbuild;
-            info!("Get Url");
-            let buildlink = format!(
-                "https://api.papermc.io/v2/projects/{}/versions/{}/builds/{}",
-                core_name, version, build
-            );
-            let url: Url = reqwest::get(&buildlink).await?.json().await?;
-            Ok((
-                format!("{}/downloads/{}", buildlink, url.downloads.application.name),
-                ChooseHash::SHA256(url.downloads.application.sha256),
-            ))
         }
     }
 
     //Find version in version list, if exist give out version or give error
-    async fn find_version(
-        version: &crate::config::versions::Versions,
-    ) -> Result<String, DownloadErrors> {
+    async fn find_version(version: Option<&str>) -> Result<String, DownloadErrors> {
         debug!("Start find Version");
         let link = format!("https://api.papermc.io/v2/projects/{}", Self::CORE_NAME);
         let verlist: VersionList = reqwest::get(link).await?.json().await?;
         let verlist = verlist.versions;
         match version {
-            crate::config::versions::Versions::Version(ver) => {
-                if verlist.contains(ver) {
-                    Ok(ver.to_string())
+            Some(ver) => {
+                if verlist.contains(&ver.to_owned()) {
+                    Ok(ver.to_owned())
                 } else {
                     Err(DownloadErrors::DownloadCorrupt(format!(
                         "No one version ->{}<- find",
@@ -113,8 +117,8 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
                     )))
                 }
             }
-            crate::config::versions::Versions::Latest => match verlist.last() {
-                Some(e) => Ok(e.to_string()),
+            None => match verlist.last() {
+                Some(e) => Ok(e.to_owned()),
                 None => Err(DownloadErrors::DownloadCorrupt(
                     "No one version find".to_string(),
                 )),

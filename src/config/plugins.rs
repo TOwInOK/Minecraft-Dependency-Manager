@@ -1,4 +1,3 @@
-use crate::config::Versions;
 use log::info;
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +8,7 @@ pub struct Plugin {
     pub source: Sources,
     // Версия
     #[serde(default)]
-    pub version: Versions,
+    pub version: Option<String>,
     // Стабильная, Альфа, Бета
     #[serde(default)]
     pub channel: Channels,
@@ -41,7 +40,7 @@ pub enum Channels {
 }
 
 impl Channels {
-    pub async fn get_str(&self) -> &str {
+    pub async fn get_str(&self) -> &'static str {
         match self {
             Channels::Release => "release",
             Channels::Beta => "beta",

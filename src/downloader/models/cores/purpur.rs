@@ -1,11 +1,10 @@
-use log::{debug, info};
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     config::core::Core,
-    downloader::{hash::ChooseHash, models::model::ModelCore, Downloader},
-    errors::error::{ConfigErrors, DownloadErrors},
-    lock::lock::{ExistState, Meta, MetaData},
+    downloader::{hash::ChooseHash, models::model::ModelCore},
+    errors::error::DownloadErrors,
 };
 
 pub struct Purpur {}
@@ -37,59 +36,63 @@ pub struct FileHash {
 
 impl ModelCore for Purpur {
     //find build and push link
-    async fn get_link(core: &mut Core) -> Result<(String, ChooseHash), DownloadErrors> {
-        let version = &core.version;
+    async fn get_link(core: &Core) -> Result<(String, ChooseHash, String), DownloadErrors> {
+        let build = core.build.as_deref();
+        let version = core.version.as_deref();
         let version = Self::find_version(version).await?;
-        let build = &mut core.build;
+        //Version string
         let verlink = format!("https://api.purpurmc.org/v2/purpur/{}", version);
         info!("Get BuildList");
         let build_list: BuildList = reqwest::get(verlink).await?.json().await?;
-        let build_list_latest = build_list.builds.latest;
+        let build_list_latest: &str = build_list.builds.latest.as_ref();
         let build_list = build_list.builds.all;
-        if !build.is_empty() {
-            if build_list.contains(&build.to_string()) {
-                info!("Find build, download");
-                let build_link =
-                    format!("https://api.purpurmc.org/v2/purpur/{}/{}", version, build);
+
+        match build {
+            Some(e) => {
+                if build_list.contains(&e.to_owned()) {
+                    info!("Find build, download");
+                    let build_link =
+                        format!("https://api.purpurmc.org/v2/purpur/{}/{}", version, e);
+                    info!("Get Url");
+                    let file_hash: FileHash = reqwest::get(&build_link).await?.json().await?;
+                    Ok((
+                        format!("{}/download", build_link),
+                        ChooseHash::MD5(file_hash.md5),
+                        e.to_owned(),
+                    ))
+                } else {
+                    Err(DownloadErrors::DownloadCorrupt(format!(
+                        "No one build like: {} find",
+                        e
+                    )))
+                }
+            }
+            None => {
+                info!("Download latest build");
                 info!("Get Url");
+                let build_link = format!(
+                    "https://api.purpurmc.org/v2/purpur/{}/{}",
+                    version, build_list_latest
+                );
                 let file_hash: FileHash = reqwest::get(&build_link).await?.json().await?;
                 Ok((
                     format!("{}/download", build_link),
                     ChooseHash::MD5(file_hash.md5),
+                    build_list_latest.to_owned(),
                 ))
-            } else {
-                Err(DownloadErrors::DownloadCorrupt(format!(
-                    "No one build like: {} find",
-                    build
-                )))
             }
-        } else {
-            info!("Download latest build");
-            info!("Get Url");
-            let build_link = format!(
-                "https://api.purpurmc.org/v2/purpur/{}/{}",
-                version, build_list_latest
-            );
-            let file_hash: FileHash = reqwest::get(&build_link).await?.json().await?;
-            *build = build_list_latest.to_string();
-            Ok((
-                format!("{}/download", build_link),
-                ChooseHash::MD5(file_hash.md5),
-            ))
         }
     }
 
     //Find version in version list, if exist give out version or give error
-    async fn find_version(
-        version: &crate::config::versions::Versions,
-    ) -> Result<String, DownloadErrors> {
+    async fn find_version(version: Option<&str>) -> Result<String, DownloadErrors> {
         let link = "https://api.purpurmc.org/v2/purpur";
         let verlist: VersionList = reqwest::get(link).await?.json().await?;
-        let verlist = verlist.versions;
+        let verlist: &[String] = verlist.versions.as_ref();
         match version {
-            crate::config::versions::Versions::Version(ver) => {
-                if verlist.contains(ver) {
-                    Ok(ver.to_string())
+            Some(ver) => {
+                if verlist.contains(&ver.to_owned()) {
+                    Ok(ver.to_owned())
                 } else {
                     Err(DownloadErrors::DownloadCorrupt(format!(
                         "No one version ->{}<- find",
@@ -97,7 +100,7 @@ impl ModelCore for Purpur {
                     )))
                 }
             }
-            crate::config::versions::Versions::Latest => match verlist.last() {
+            None => match verlist.last() {
                 Some(e) => Ok(e.to_string()),
                 None => Err(DownloadErrors::DownloadCorrupt(
                     "No one version find".to_string(),
