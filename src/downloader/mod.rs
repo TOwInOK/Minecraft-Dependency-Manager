@@ -25,12 +25,12 @@ use self::models::model::ModelExtensions;
 
 #[derive(Debug)]
 pub struct Downloader<'config, 'lock> {
-    config: &'config mut Config,
+    config: &'config Config,
     lock: &'lock mut Lock,
 }
 
 impl<'config, 'lock> Downloader<'config, 'lock> {
-    pub fn new(config: &'config mut Config, lock: &'lock mut Lock) -> Self {
+    pub fn init(config: &'config mut Config, lock: &'lock mut Lock) -> Self {
         Self { config, lock }
     }
 
@@ -97,7 +97,6 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
         version: String,
     ) -> Result<(), DownloadErrors> {
         if self.config.core.force_update {
-            self.config.core.force_update = false;
             info!("Force update core!");
             return self.download_core(core_name, link, hash, version).await;
         }

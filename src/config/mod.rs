@@ -27,7 +27,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub async fn load_config(path: String) -> Result<Config, ConfigErrors> {
+    pub async fn load_config(path: &str) -> Result<Config, ConfigErrors> {
         info!("Загрузка конфигурационного файла...");
         let toml = fs::read_to_string(&path).await?;
         info!("Файл успешно загружен.");

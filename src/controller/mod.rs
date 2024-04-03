@@ -19,8 +19,7 @@ impl Controller {
 
     async fn new() -> Self {
         // Load Config file
-        let path =
-            "/Users/dmitryfefilov/Documents/Rust/MinecraftAddonController/config.toml".to_string();
+        let path = "config.toml";
         let config = Config::load_config(path).await.unwrap_or_else(|e| {
             log::error!("message: {}", e);
             log::warn!("Происходит загрузка стандартного конфига");
@@ -59,7 +58,7 @@ impl Controller {
         let config = self.config.get_mut();
         let lock = self.lock.get_mut();
 
-        Downloader::new(config, lock)
+        Downloader::init(config, lock)
             .check_and_download()
             .await
             .unwrap_or_else(|e| error!("{e}"));
@@ -67,8 +66,14 @@ impl Controller {
 
     pub async fn watch_config_changes(&mut self) {
         // Load new Config file
-        let path = self.config.lock().await.additions.path_to_configs.clone();
-        let config = Config::load_config(path).await.unwrap_or_else(|e| {
+        let path = self
+            .config
+            .lock()
+            .await
+            .additions
+            .path_to_configs
+            .to_owned();
+        let config = Config::load_config(&path).await.unwrap_or_else(|e| {
             log::error!("message: {}", e);
             log::warn!("Происходит загрузка стандартного конфига");
             Config::default()
