@@ -20,7 +20,7 @@ impl Controller {
     async fn new() -> Self {
         // Load Config file
         let path =
-            "/Users/dmitryfefilov/Documents/Rust/MinecraftAddonController/config.toml".to_string();
+            "config.toml".to_string();
         let config = Config::load_config(path).await.unwrap_or_else(|e| {
             log::error!("message: {}", e);
             log::warn!("Происходит загрузка стандартного конфига");
