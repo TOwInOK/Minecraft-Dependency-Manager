@@ -1,7 +1,7 @@
 pub mod hash;
 mod models;
 
-use crate::config::core::Provider;
+use crate::config::core::{Core, Provider};
 use crate::config::plugins::{Plugin, Sources};
 use crate::config::Config;
 use crate::downloader::models::cores::folia::Folia;
@@ -44,25 +44,25 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
     /////Core section
 
     ///Check core and add it into list for download.
-    async fn get_core_link(&self) -> Result<(String, ChooseHash, String), DownloadErrors> {
+    async fn get_core_link(core: &Core) -> Result<(String, ChooseHash, String), DownloadErrors> {
         info!("Start to match provider of core");
-        match self.config.core.provider {
-            Provider::Vanilla => Vanilla::get_link(&self.config.core).await,
-            Provider::Paper => Paper::get_link(&self.config.core).await,
-            Provider::Folia => Folia::get_link(&self.config.core).await,
-            Provider::Purpur => Purpur::get_link(&self.config.core).await,
+        match core.provider {
+            Provider::Vanilla => Vanilla::get_link(core).await,
+            Provider::Paper => Paper::get_link(core).await,
+            Provider::Folia => Folia::get_link(core).await,
+            Provider::Purpur => Purpur::get_link(core).await,
             Provider::Fabric => todo!(),
             Provider::Forge => todo!(),
             Provider::NeoForge => todo!(),
-            Provider::Waterfall => Waterfall::get_link(&self.config.core).await,
-            Provider::Velocity => Velocity::get_link(&self.config.core).await,
+            Provider::Waterfall => Waterfall::get_link(core).await,
+            Provider::Velocity => Velocity::get_link(core).await,
         }
     }
 
     /// Make reqwest to check version and download core.
     async fn core_reqwest(&mut self) -> Result<(), DownloadErrors> {
         //Find version to download
-        let (link, hash, version) = self.get_core_link().await?;
+        let (link, hash, version) = Self::get_core_link(&self.config.core).await?;
         let core_name = self.config.core.provider.get_name().await;
         debug!("Find {} link: {}, hash: {}", core_name, &link, &hash);
         info!("Start to download {}!", core_name);

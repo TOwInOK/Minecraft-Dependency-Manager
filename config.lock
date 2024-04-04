@@ -4,6 +4,7 @@ version = "1.20.4"
 build = "2165"
 path = "core/purpur.jar"
 
+<<<<<<< HEAD
 [plugins.chunky]
 version = "iwsbfPGg"
 path = "plugins/chunky.jar"
@@ -15,3 +16,16 @@ path = "plugins/simple-voice-chat.jar"
 [plugins.itemswapper]
 version = "UKVc6pCj"
 path = "plugins/itemswapper.jar"
+=======
+[plugins.simple-voice-chat]
+version = "WvPmSPnl"
+path = "plugins/simple-voice-chat.jar"
+
+[plugins.itemswapper]
+version = "UKVc6pCj"
+path = "plugins/itemswapper.jar"
+
+[plugins.chunky]
+version = "iwsbfPGg"
+path = "plugins/chunky.jar"
+>>>>>>> 3b989df40d7b47f4ec089cca7bd3753d57fe090e
