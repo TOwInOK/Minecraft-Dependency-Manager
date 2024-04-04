@@ -8,7 +8,10 @@ use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::core::{Core, Provider},
+    config::{
+        core::{Core, Provider},
+        Config,
+    },
     errors::error::{ConfigErrors, LockErrors},
 };
 
@@ -188,6 +191,30 @@ impl Lock {
             Some(e) => delete_file_by_path(&e.path).await,
             None => Err(LockErrors::NotFound(name.to_string())),
         }
+    }
+
+    pub async fn remove_if_not_exist_plugin(&mut self, config: &Config) -> Result<(), LockErrors> {
+        // Create list of keys to delete
+        let mut keys_to_remove: Vec<String> = Vec::new();
+        for i in self.plugins.keys() {
+            if !config.plugins.contains_key(i) {
+                keys_to_remove.push(i.to_owned());
+            }
+        }
+        // Remove the plugins from self.plugins using the collected keys
+        for i in keys_to_remove.iter() {
+            let i = self.plugins.remove(i).unwrap();
+            delete_file_by_path(&i.path).await?;
+        }
+        Ok(())
+    }
+
+    pub async fn remove_if_not_exist_core(&mut self, config: &Config) -> Result<(), LockErrors> {
+        if self.core.name != config.core.provider {
+            delete_file_by_path(&self.core.path).await?;
+            self.core = CoreMetaData::default();
+        }
+        Ok(())
     }
 
     /// Converting [`Core`] to [`CoreMetaData`] and change values of core in [`Lock`]

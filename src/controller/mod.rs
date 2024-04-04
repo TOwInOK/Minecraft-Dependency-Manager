@@ -3,7 +3,7 @@ use std::time::Duration;
 use log::{error, info};
 use tokio::{sync::Mutex, time::sleep};
 
-use crate::{config::Config, downloader::Downloader, lock::lock::Lock};
+use crate::{config::Config, downloader::Downloader, errors::error::LockErrors, lock::lock::Lock};
 
 pub struct Controller {
     config: Mutex<Config>,
@@ -57,7 +57,9 @@ impl Controller {
     async fn start(&mut self) {
         let config = self.config.get_mut();
         let lock = self.lock.get_mut();
-
+        remove_zombies(lock, config)
+            .await
+            .unwrap_or_else(|e| error!("{e}"));
         Downloader::init(config, lock)
             .check_and_download()
             .await
@@ -94,4 +96,11 @@ impl Controller {
         self.lock = lock.into();
         self.config = config.into();
     }
+}
+
+/// Итерируем Lock и находим то чего нет в Config.
+/// Нет, удаляем в Lock.
+async fn remove_zombies(lock: &mut Lock, config: &Config) -> Result<(), LockErrors> {
+    lock.remove_if_not_exist_plugin(config).await?;
+    lock.remove_if_not_exist_core(config).await
 }
