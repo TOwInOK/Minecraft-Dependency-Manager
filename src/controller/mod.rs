@@ -3,7 +3,7 @@ use std::time::Duration;
 use log::{error, info, trace};
 use tokio::{sync::Mutex, time::sleep};
 
-use crate::{config::Config, downloader::Downloader, errors::error::LockErrors, lock::lock::Lock};
+use crate::{config::Config, downloader::Downloader, errors::error::LockErrors, lock::locker::Lock};
 
 pub struct Controller {
     config: Mutex<Config>,

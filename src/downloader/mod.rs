@@ -12,7 +12,7 @@ use crate::downloader::models::cores::velocity::Velocity;
 use crate::downloader::models::cores::waterfall::Waterfall;
 use crate::downloader::models::model::ModelCore;
 use crate::errors::error::DownloadErrors;
-use crate::lock::lock::{ExistState, Lock};
+use crate::lock::locker::{ExistState, Lock};
 
 use log::{debug, info};
 use std::fs::File;
