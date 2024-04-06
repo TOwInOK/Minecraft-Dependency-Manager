@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use log::{error, info};
+use log::{error, info, trace};
 use tokio::{sync::Mutex, time::sleep};
 
 use crate::{config::Config, downloader::Downloader, errors::error::LockErrors, lock::lock::Lock};
@@ -31,9 +31,7 @@ impl Controller {
         let mut lock = Lock::default();
         if let Err(e) = lock.load(&config.additions.path_to_lock).await {
             error!("{e}");
-            lock.create(&config.additions.path_to_lock)
-                .await
-                .unwrap();
+            lock.create(&config.additions.path_to_lock).await.unwrap();
             lock.load(&config.additions.path_to_lock).await.unwrap();
         }
 
@@ -58,9 +56,11 @@ impl Controller {
     async fn start(&mut self) {
         let config = self.config.get_mut();
         let lock = self.lock.get_mut();
+        info!("Start removing useless things");
         remove_zombies(lock, config)
             .await
             .unwrap_or_else(|e| error!("{e}"));
+        info!("Init downloader");
         Downloader::init(config, lock)
             .check_and_download()
             .await
@@ -102,6 +102,7 @@ impl Controller {
 /// Итерируем Lock и находим то чего нет в Config.
 /// Нет, удаляем в Lock.
 async fn remove_zombies(lock: &mut Lock, config: &Config) -> Result<(), LockErrors> {
+    trace!("Start fn: remove_zombies");
     lock.remove_if_not_exist_plugin(config).await?;
     lock.remove_if_not_exist_core(config).await
 }

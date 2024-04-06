@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::{debug, info};
+use log::{debug, info, trace};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -90,7 +90,7 @@ impl Lock {
     }
 
     /// Re parsing file and load
-    pub async fn reload(&mut self, path: &str) -> Result<(), ConfigErrors> {
+    pub async fn _reload(&mut self, path: &str) -> Result<(), ConfigErrors> {
         if !self.check_path(path).await {
             return Err(ConfigErrors::LoadCorrupt(format!(
                 "No path like: {}, exist",
@@ -182,11 +182,11 @@ impl Lock {
 
     /// Delete all core items from meta_data
     /// cause only one core can exist in one time
-    pub async fn delete_core(&mut self) -> Result<(), LockErrors> {
+    pub async fn _delete_core(&mut self) -> Result<(), LockErrors> {
         delete_file_by_path(&self.core.path).await
     }
     ///Delete plugin
-    pub async fn delete_plugin(&mut self, name: &str) -> Result<(), LockErrors> {
+    pub async fn _delete_plugin(&mut self, name: &str) -> Result<(), LockErrors> {
         match self.plugins.remove(name) {
             Some(e) => delete_file_by_path(&e.path).await,
             None => Err(LockErrors::NotFound(name.to_string())),
@@ -194,6 +194,7 @@ impl Lock {
     }
 
     pub async fn remove_if_not_exist_plugin(&mut self, config: &Config) -> Result<(), LockErrors> {
+        trace!("Start fn: remove_if_not_exist_plugin");
         // Create list of keys to delete
         let mut keys_to_remove: Vec<String> = Vec::new();
         for i in self.plugins.keys() {
@@ -201,16 +202,21 @@ impl Lock {
                 keys_to_remove.push(i.to_owned());
             }
         }
+        debug!("List of keys to remove: {:#?}", &keys_to_remove);
         // Remove the plugins from self.plugins using the collected keys
         for i in keys_to_remove.iter() {
             let i = self.plugins.remove(i).unwrap();
             delete_file_by_path(&i.path).await?;
         }
-        Ok(())
+        self.save(&config.additions.path_to_lock)
+            .await
+            .map_err(|e| LockErrors::NotFound(e.to_string()))
     }
 
     pub async fn remove_if_not_exist_core(&mut self, config: &Config) -> Result<(), LockErrors> {
+        trace!("Start fn: remove_if_not_exist_core");
         if self.core.name != config.core.provider {
+            debug!("Delete core: {:#?}", &self.core.name);
             delete_file_by_path(&self.core.path).await?;
             self.core = CoreMetaData::default();
         }
@@ -241,7 +247,7 @@ impl Lock {
     }
 }
 
-async fn delete_file(name: &str, download_dir: &str) -> Result<(), LockErrors> {
+async fn _delete_file(name: &str, download_dir: &str) -> Result<(), LockErrors> {
     let file_name = format!("{}.jar", name);
     let file_path = PathBuf::from(download_dir).join(file_name);
     debug!("file_path: {:#?}", file_path);
@@ -249,6 +255,7 @@ async fn delete_file(name: &str, download_dir: &str) -> Result<(), LockErrors> {
 }
 
 async fn delete_file_by_path(path: &str) -> Result<(), LockErrors> {
+    info!("DELETE by path: {path}");
     if path.is_empty() {
         Ok(())
     } else {

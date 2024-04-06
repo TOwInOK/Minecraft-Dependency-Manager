@@ -4,10 +4,6 @@ version = "1.20.4"
 build = "2166"
 path = "core/purpur.jar"
 
-[plugins.itemswapper]
-version = "UKVc6pCj"
-path = "plugins/itemswapper.jar"
-
 [plugins.simple-voice-chat]
 version = "r7e564VW"
 path = "plugins/simple-voice-chat.jar"
