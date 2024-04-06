@@ -19,21 +19,22 @@ impl Controller {
 
     async fn new() -> Self {
         // Load Config file
-        let path = "config.toml";
-        let config = Config::load_config(path).await.unwrap_or_else(|e| {
+        let path = "./config.toml";
+        let mut config = Config::load_config(path).await.unwrap_or_else(|e| {
             log::error!("message: {}", e);
             log::warn!("Происходит загрузка стандартного конфига");
             Config::default()
         });
+        config.additions.path_to_configs = path.to_owned();
 
         // Load lock
         let mut lock = Lock::default();
-        if let Err(e) = lock.load(&config.additions.path_to_configs).await {
+        if let Err(e) = lock.load(&config.additions.path_to_lock).await {
             error!("{e}");
-            lock.create(&config.additions.path_to_configs)
+            lock.create(&config.additions.path_to_lock)
                 .await
                 .unwrap();
-            lock.load(&config.additions.path_to_configs).await.unwrap();
+            lock.load(&config.additions.path_to_lock).await.unwrap();
         }
 
         let lock = Mutex::new(lock);

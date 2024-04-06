@@ -1,27 +1,14 @@
 [core]
-# Выбери один из вариантов: vanilla, paper, purpur, forge, neoForge, fabric, folia, waterfall, velocity
 provider = "purpur"
 version = "1.20.4"
 # build = "2160"
-# Замораживать ли объекты при наличии в системе
 freeze = false
-force_update = true
+force_update = false
 
 [plugins]
 [plugins.simple-voice-chat]
 [plugins.chunky]
 [plugins.itemswapper]
-# version = "ail5iPUK"
-# channel = "beta"
-# freeze = false
-# update = false
-
-# [plugins.cooler2]
-# source = "hangar"
-# version = "ail5iPUK"
-# channel = "beta"
-# freeze = false
-# update = true
 
 [additions]
 configPluguinsFrom = "git@github.com:TOwInOK/test.git"

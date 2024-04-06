@@ -155,7 +155,7 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
                             &name,
                             version,
                             &self.config.additions.path_to_plugins,
-                            &self.config.additions.path_to_configs,
+                            &self.config.additions.path_to_lock,
                             link,
                             hash,
                         )
@@ -173,7 +173,7 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
                         &name,
                         version,
                         &self.config.additions.path_to_plugins,
-                        &self.config.additions.path_to_configs,
+                        &self.config.additions.path_to_lock,
                         link,
                         hash,
                     )
@@ -186,7 +186,7 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
                         &name,
                         version,
                         &self.config.additions.path_to_plugins,
-                        &self.config.additions.path_to_configs,
+                        &self.config.additions.path_to_lock,
                         link,
                         hash,
                     )
