@@ -30,7 +30,7 @@ pub struct Downloader<'config, 'lock> {
 }
 
 impl<'config, 'lock> Downloader<'config, 'lock> {
-    pub fn init(config: &'config mut Config, lock: &'lock mut Lock) -> Self {
+    pub fn init(config: &'config Config, lock: &'lock mut Lock) -> Self {
         Self { config, lock }
     }
 

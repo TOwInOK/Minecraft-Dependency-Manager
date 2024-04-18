@@ -1,6 +1,7 @@
-use std::{error::Error, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use log::{error, info, trace};
+use notify::recommended_watcher;
 use tokio::{sync::Mutex, time::sleep};
 use tokio_util::sync::CancellationToken;
 
@@ -9,109 +10,59 @@ use crate::{
 };
 
 pub struct Controller {
-    config: Mutex<Config>,
-    lock: Mutex<Lock>,
+    config: Arc<Mutex<Config>>,
+    lock: Arc<Mutex<Lock>>,
 }
 
 impl Controller {
     pub async fn init() {
-        let controller = Self::new().await;
-        controller.watch_config_changes().await;
+        let controller = Self::new().await.unwrap();
+        let token = CancellationToken::new();
+        let token_clone = token.clone();
+        {
+            // clone data
+            let config = Arc::clone(&controller.config);
+            let lock = Arc::clone(&controller.lock);
+            tokio::spawn(async move {
+                run(config, lock, &token).await;
+                // Assuming run() returns a Result or similar
+            });
+        }
+
+        let config = Arc::clone(&controller.config);
+        let config = config.lock().await;
+        watch_config_changes(&config, &token_clone).await
     }
 
-    async fn new() -> Self {
+    async fn new() -> Result<Self, Box<dyn std::error::Error>> {
         // Load Config file
         let path = "./config.toml";
-        let mut config = Config::load_config(path).await.unwrap_or_else(|e| {
-            log::error!("message: {}", e);
-            log::warn!("Происходит загрузка стандартного конфига");
-            Config::default()
-        });
-        config.additions.path_to_configs = path.to_owned();
-
-        // Load lock
-        let mut lock = Lock::default();
-        if let Err(e) = lock.load(&config.additions.path_to_lock).await {
-            error!("{e}");
-            lock.create(&config.additions.path_to_lock).await.unwrap();
-            lock.load(&config.additions.path_to_lock).await.unwrap();
-        }
-
-        let lock = Mutex::new(lock);
-        let config = Mutex::new(config);
-
-        Self { config, lock }
-    }
-
-    async fn run(&mut self, token: CancellationToken) {
-        // let sleep_cooldown = self.config.lock().await.additions.time_to_await;
-        let cooldown = 100;
-        loop {
-            info!("Start checking and download");
-            self.start().await;
-
-            // Sleep for 5 minutes
-            tokio::select! {
-                _ = sleep(Duration::from_millis(cooldown)) => {},
-                _ = token.cancelled() => break,
-            };
-        }
-    }
-
-    /// Check zombies entities.
-    /// Start download fn.
-   async fn start(&self) {
-        let mut config = self.config.lock().await;
-        let mut lock = self.lock.lock().await;
-
-        info!("Start removing useless things");
-        if let Err(e) = remove_zombies(&mut lock, &mut config).await {
-            error!("{:?}", e);
-        }
-
-        info!("Init downloader");
-        if let Err(e) = Downloader::init(&mut config, &mut lock)
-            .check_and_download()
-            .await
-        {
-            error!("{:?}", e);
-        }
-    }
-
-    pub async fn watch_config_changes(&self) {
-        let token = CancellationToken::new();
-        let downloader = tokio::spawn(self.run(token));
-
-        // Load new Config file
-        let path = self.config.lock().await.additions.path_to_configs.to_owned();
-        let config = match Config::load_config(&path).await {
-            Ok(config) => {
-                log::debug!("{:#?}", config);
-                config
+        let config = match Config::load_config(path).await {
+            Ok(mut config) => {
+                config.additions.path_to_configs = path.to_owned();
+                Arc::new(Mutex::new(config))
             }
             Err(e) => {
-                log::error!("message: {}", e);
-                log::warn!("Происходит загрузка стандартного конфига");
-                Config::default()
+                log::error!("Failed to load config: {}", e);
+                log::warn!("Loading default config");
+                Arc::new(Mutex::new(Config::default()))
             }
         };
 
-        // Load new lock
-        let mut lock = Lock::default();
-        if let Err(e) = lock.load(&config.additions.path_to_configs).await {
-            error!("{:?}", e);
-            lock.create(&config.additions.path_to_configs)
-                .await
-                .unwrap();
-            lock.load(&config.additions.path_to_configs)
-                .await
-                .unwrap_or_else(|e| error!("{:?}", e));
-        }
+        // Load lock
+        let lock = {
+            let mut lock = Lock::default();
+            if let Err(e) = lock.load(&config.lock().await.additions.path_to_lock).await {
+                error!("{}", e);
+                lock.create(&config.lock().await.additions.path_to_lock)
+                    .await?;
+                lock.load(&config.lock().await.additions.path_to_lock)
+                    .await?;
+            }
+            Arc::new(Mutex::new(lock))
+        };
 
-        *self.lock.lock().await = lock;
-        *self.config.lock().await = config;
-
-        watcher(token).await;
+        Ok(Self { config, lock })
     }
 }
 
@@ -123,8 +74,72 @@ async fn remove_zombies(lock: &mut Lock, config: &Config) -> Result<(), LockErro
     lock.remove_if_not_exist_core(config).await
 }
 
-
-async fn watcher(token: CancellationToken) {
+async fn watcher(token: &CancellationToken) {
     token.cancel();
     info!("Token Stopped {:#?}", token)
+}
+
+/// Check zombies entities.
+/// Start download fn.
+async fn start(config: &Arc<Mutex<Config>>, lock: &Arc<Mutex<Lock>>) {
+    let config = config.lock().await;
+    let mut lock = lock.lock().await;
+
+    info!("Start removing useless things");
+    if let Err(e) = remove_zombies(&mut lock, &config).await {
+        error!("{:?}", e);
+    }
+
+    info!("Init downloader");
+    if let Err(e) = Downloader::init(&config, &mut lock)
+        .check_and_download()
+        .await
+    {
+        error!("{:?}", e);
+    }
+}
+
+async fn run(config: Arc<Mutex<Config>>, lock: Arc<Mutex<Lock>>, token: &CancellationToken) {
+    // let sleep_cooldown = self.config.lock().await.additions.time_to_await;
+    let cooldown = 100;
+    loop {
+        info!("Start checking and download");
+        start(&config, &lock).await;
+
+        // Sleep for 5 minutes
+        tokio::select! {
+            _ = sleep(Duration::from_millis(cooldown)) => {},
+            _ = token.cancelled() => break,
+        };
+    }
+}
+
+/// Load downloader module.
+/// Always check config file.
+pub async fn watch_config_changes(config: &Config, token: &CancellationToken) {
+    // Load new Config file
+    let path = config.additions.path_to_configs.to_owned();
+    let config = match Config::load_config(&path).await {
+        Ok(config) => {
+            log::debug!("{:#?}", config);
+            config
+        }
+        Err(e) => {
+            log::error!("message: {}", e);
+            log::warn!("Происходит загрузка стандартного конфига");
+            Config::default()
+        }
+    };
+
+    // Load new lock
+    let mut lock = Lock::default();
+    if let Err(e) = lock.load(&config.additions.path_to_configs).await {
+        error!("{:?}", e);
+        lock.create(&config.additions.path_to_configs)
+            .await
+            .unwrap();
+        lock.load(&config.additions.path_to_configs)
+            .await
+            .unwrap_or_else(|e| error!("{:?}", e));
+    }
 }
