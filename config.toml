@@ -11,8 +11,8 @@ force_update = false
 # [plugins.itemswapper]
 
 [additions]
-configPluguinsFrom = "git@github.com:TOwInOK/test.git"
-key = "SUPEREKLy"
+# configPluguinsFrom = "git@github.com:TOwInOK/test.git"
+# key = "SUPEREKLy"
 path_to_core = "core"
 # path_to_mods = ""
 path_to_plugins = "plugins"

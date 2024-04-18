@@ -23,9 +23,9 @@ async fn get_core_link(core: &mut Core) -> Result<(String, ChooseHash), Download
         Provider::Paper => Paper::get_link(core).await,
         Provider::Folia => Folia::get_link(core).await,
         Provider::Purpur => Purpur::get_link(core).await,
-        Provider::Fabric => todo!(),
-        Provider::Forge => todo!(),
-        Provider::NeoForge => todo!(),
+        // Provider::Fabric => todo!(),
+        // Provider::Forge => todo!(),
+        // Provider::NeoForge => todo!(),
         Provider::Waterfall => Waterfall::get_link(core).await,
         Provider::Velocity => Velocity::get_link(core).await,
     }
