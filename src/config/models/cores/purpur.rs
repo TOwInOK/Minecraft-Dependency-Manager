@@ -1,4 +1,4 @@
-use log::info;
+use log::{info, trace};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -34,44 +34,43 @@ pub struct FileHash {
 
 // Download
 // https://api.purpurmc.org/v2/purpur/{Version}/{Build}/download
+//
+const MAIN_LINK: &str = "https://api.purpurmc.org/v2/purpur";
 
 impl ModelCore for Purpur {
     //find build and push link
     async fn get_link(core: &Core) -> Result<(String, ChooseHash, String)> {
         let build = core.build.as_deref();
         let version = core.version.as_deref();
+        trace!("Find version started!");
         let version = Self::find_version(version).await?;
         //Version string
-        let verlink = format!("https://api.purpurmc.org/v2/purpur/{}", version);
+        let verlink = format!("{}/{}", MAIN_LINK, version);
         info!("Get BuildList");
         let build_list: BuildList = reqwest::get(verlink).await?.json().await?;
         let build_list_latest: &str = build_list.builds.latest.as_ref();
         let build_list = build_list.builds.all;
 
         match build {
-            Some(e) => {
-                if build_list.contains(&e.to_owned()) {
+            Some(build) => {
+                if build_list.contains(&build.to_owned()) {
                     info!("Find build, download");
-                    let build_link =
-                        format!("https://api.purpurmc.org/v2/purpur/{}/{}", version, e);
+                    let build_link = format!("{}/{}/{}", MAIN_LINK, version, build);
                     info!("Get Url");
                     let file_hash: FileHash = reqwest::get(&build_link).await?.json().await?;
                     Ok((
                         format!("{}/download", build_link),
                         ChooseHash::MD5(file_hash.md5),
-                        e.to_owned(),
+                        build.to_owned(),
                     ))
                 } else {
-                    not_found_build_error!(e)
+                    not_found_build_error!(build)
                 }
             }
             None => {
                 info!("Download latest build");
                 info!("Get Url");
-                let build_link = format!(
-                    "https://api.purpurmc.org/v2/purpur/{}/{}",
-                    version, build_list_latest
-                );
+                let build_link = format!("{}/{}/{}", MAIN_LINK, version, build_list_latest);
                 let file_hash: FileHash = reqwest::get(&build_link).await?.json().await?;
                 Ok((
                     format!("{}/download", build_link),
@@ -84,11 +83,11 @@ impl ModelCore for Purpur {
 
     //Find version in version list, if exist give out version or give error
     async fn find_version(version: Option<&str>) -> Result<String> {
-        let link = "https://api.purpurmc.org/v2/purpur";
-        let verlist: VersionList = reqwest::get(link).await?.json().await?;
+        let verlist: VersionList = reqwest::get(MAIN_LINK).await?.json().await?;
         let verlist: &[String] = verlist.versions.as_ref();
         match version {
             Some(ver) => {
+                trace!("have ver");
                 if verlist.contains(&ver.to_owned()) {
                     Ok(ver.to_owned())
                 } else {

@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::{debug, info, trace};
+use log::{debug, error, info, trace, warn};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -56,7 +56,11 @@ impl Lock {
 
         info!("Deserializing lock file contents...");
         // Deserialize the file contents into Lock struct
-        let lock: Lock = toml::from_str(&toml)?;
+        let lock: Lock = toml::from_str(&toml).unwrap_or_else(|e| {
+            error!("Parse error: {}", e);
+            warn!("Load default Lock!");
+            Lock::default()
+        });
         info!("Lock file deserialized successfully.");
         *self = lock;
         info!("Lock reload successfully");

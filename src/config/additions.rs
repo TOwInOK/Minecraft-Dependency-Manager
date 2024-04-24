@@ -34,9 +34,10 @@ fn plugins() -> String {
     warn!("We use default plugins path!");
     "plugins".to_string()
 }
+//folder for config files
 fn configs() -> String {
     warn!("We use default config path!");
-    "configs.toml".to_string()
+    "./configs".to_string()
 }
 fn lock() -> String {
     warn!("We use default lock path!");

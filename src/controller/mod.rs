@@ -6,6 +6,8 @@ use tokio_util::sync::CancellationToken;
 
 use crate::{config::Config, downloader::Downloader, errors::error::Result, lock::locker::Lock};
 
+const CONFIG_PATH: &str = "./config.toml";
+
 pub struct Controller {
     config: Arc<Mutex<Config>>,
     lock: Arc<Mutex<Lock>>,
@@ -16,28 +18,20 @@ impl Controller {
         let controller = Self::new().await.unwrap();
         let token = CancellationToken::new();
         let token_clone = token.clone();
-        {
-            // clone data
-            let config = Arc::clone(&controller.config);
-            let lock = Arc::clone(&controller.lock);
-            tokio::spawn(async move {
-                run(config, lock, &token).await;
-            });
-        }
 
         let config = Arc::clone(&controller.config);
-        let config = config.lock().await;
-        watch_config_changes(&config, &token_clone).await
+        let lock = Arc::clone(&controller.lock);
+        tokio::spawn(async move {
+            run(config, lock, &token).await;
+        });
+
+        watch_config_changes(&token_clone).await
     }
 
     async fn new() -> Result<Self> {
         // Load Config file
-        let path = "./config.toml";
-        let config = match Config::load_config(path).await {
-            Ok(mut config) => {
-                config.additions.path_to_configs = path.to_owned();
-                Arc::new(Mutex::new(config))
-            }
+        let config = match Config::load_config(CONFIG_PATH).await {
+            Ok(config) => Arc::new(Mutex::new(config)),
             Err(e) => {
                 log::error!("Failed to load config: {}", e);
                 log::warn!("Loading default config");
@@ -113,10 +107,9 @@ async fn run(config: Arc<Mutex<Config>>, lock: Arc<Mutex<Lock>>, token: &Cancell
 /// Load downloader module.
 /// Always check config file.
 /// Use `token` for canceling minecraft task
-pub async fn watch_config_changes(config: &Config, _token: &CancellationToken) {
+pub async fn watch_config_changes(_token: &CancellationToken) {
     // Load new Config file
-    let path = config.additions.path_to_configs.to_owned();
-    let config = match Config::load_config(&path).await {
+    let config = match Config::load_config(CONFIG_PATH).await {
         Ok(config) => {
             log::debug!("{:#?}", config);
             config
@@ -131,12 +124,12 @@ pub async fn watch_config_changes(config: &Config, _token: &CancellationToken) {
 
     // Load new lock
     let mut lock = Lock::default();
-    if let Err(e) = lock.load(&config.additions.path_to_configs).await {
+    if let Err(e) = lock.load(&config.additions.path_to_lock).await {
         error!("{:?}", e);
-        lock.create(&config.additions.path_to_configs)
+        lock.create(&config.additions.path_to_lock)
             .await
             .unwrap_or_else(|e| error!("{:?}", e));
-        lock.load(&config.additions.path_to_configs)
+        lock.load(&config.additions.path_to_lock)
             .await
             .unwrap_or_else(|e| error!("{:?}", e));
     }
