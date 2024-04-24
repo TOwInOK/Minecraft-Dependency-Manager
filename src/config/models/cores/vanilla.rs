@@ -1,7 +1,8 @@
 use crate::{
-    config::core::Core,
-    downloader::{hash::ChooseHash, models::model::ModelCore},
-    errors::error::DownloadErrors,
+    config::{core::Core, models::model::ModelCore},
+    downloader::hash::ChooseHash,
+    errors::error::{Error, Result},
+    not_found_version_error,
 };
 use log::debug;
 use log::info;
@@ -76,7 +77,7 @@ pub struct Server {
 
 impl ModelCore for Vanilla {
     /// Making request to mojang api and find the link to download minecraft.jar
-    async fn get_link(core: &Core) -> Result<(OuterLink, ChooseHash, VersionID), DownloadErrors> {
+    async fn get_link(core: &Core) -> Result<(OuterLink, ChooseHash, VersionID)> {
         let version = core.version.as_deref();
         debug!("Start find fn with version: {:#?}", version);
         let link = find_version(version).await?;
@@ -95,13 +96,13 @@ impl ModelCore for Vanilla {
     }
 
     ///Return `url` for get a json which contain links of all versions
-    async fn find_version(_version: Option<&str>) -> Result<String, DownloadErrors> {
+    async fn find_version(_version: Option<&str>) -> Result<String> {
         todo!()
     }
 }
 
 ///Return `url` which get a json that contain links of all versions
-async fn find_version(version: Option<&str>) -> Result<(String, String), DownloadErrors> {
+async fn find_version(version: Option<&str>) -> Result<(String, String)> {
     const LINK: &str = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
     trace!("Start find version of core!");
     let response = reqwest::get(LINK).await?;
@@ -127,9 +128,6 @@ async fn find_version(version: Option<&str>) -> Result<(String, String), Downloa
     if let Some((version_str, url)) = found_version_and_url {
         Ok((url, version_str))
     } else {
-        Err(DownloadErrors::DownloadCorrupt(format!(
-            "No one version like: {}, not found",
-            local_version
-        )))
+        not_found_version_error!(local_version)
     }
 }

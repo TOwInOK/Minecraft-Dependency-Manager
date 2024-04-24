@@ -10,5 +10,5 @@ async fn main() {
         .filter_level(log::LevelFilter::Trace)
         .init();
 
-    let _ = controller::Controller::init().await;
+    controller::Controller::init().await
 }

@@ -12,7 +12,8 @@ use crate::{
         core::{Core, Provider},
         Config,
     },
-    errors::error::{ConfigErrors, LockErrors},
+    errors::error::{Error, Result},
+    not_found, not_found_path,
 };
 
 use tokio::{
@@ -43,12 +44,9 @@ struct ExtensionMetaData {
 
 impl Lock {
     /// Load lock from the specified file path
-    pub async fn load(&mut self, path: &str) -> Result<(), ConfigErrors> {
+    pub async fn load(&mut self, path: &str) -> Result<()> {
         if !self.check_path(path).await {
-            return Err(ConfigErrors::LoadCorrupt(format!(
-                "No path like: {}, exist",
-                path
-            )));
+            return not_found_path!(path);
         }
         info!("Starting to load lock from file: {}", path);
 
@@ -66,12 +64,9 @@ impl Lock {
     }
 
     /// Create lock file
-    pub async fn create(&self, path: &str) -> Result<(), ConfigErrors> {
+    pub async fn create(&self, path: &str) -> Result<()> {
         if !self.check_path(path).await {
-            return Err(ConfigErrors::LoadCorrupt(format!(
-                "No path like: {}, exist",
-                path
-            )));
+            return not_found_path!(path);
         }
         info!("Creating lock file at path: {}", path);
 
@@ -90,12 +85,9 @@ impl Lock {
     }
 
     /// Re parsing file and load
-    pub async fn _reload(&mut self, path: &str) -> Result<(), ConfigErrors> {
+    pub async fn _reload(&mut self, path: &str) -> Result<()> {
         if !self.check_path(path).await {
-            return Err(ConfigErrors::LoadCorrupt(format!(
-                "No path like: {}, exist",
-                path
-            )));
+            return not_found_path!(path);
         }
         info!("Reloading lock file from path: {}", path);
         // Read the file contents
@@ -123,12 +115,9 @@ impl Lock {
     }
 
     /// Save lock
-    pub async fn save(&self, path: &str) -> Result<(), ConfigErrors> {
+    pub async fn save(&self, path: &str) -> Result<()> {
         if !self.check_path(path).await {
-            return Err(ConfigErrors::LoadCorrupt(format!(
-                "No path like: {}, exist",
-                path
-            )));
+            return not_found_path!(path);
         }
         info!("Saving lock to file: {}", path);
         // Serialize the Lock struct to TOML
@@ -182,18 +171,18 @@ impl Lock {
 
     /// Delete all core items from meta_data
     /// cause only one core can exist in one time
-    pub async fn _delete_core(&mut self) -> Result<(), LockErrors> {
+    pub async fn _delete_core(&mut self) -> Result<()> {
         delete_file_by_path(&self.core.path).await
     }
     ///Delete plugin
-    pub async fn _delete_plugin(&mut self, name: &str) -> Result<(), LockErrors> {
+    pub async fn _delete_plugin(&mut self, name: &str) -> Result<()> {
         match self.plugins.remove(name) {
             Some(e) => delete_file_by_path(&e.path).await,
-            None => Err(LockErrors::NotFound(name.to_string())),
+            None => not_found!(name),
         }
     }
 
-    pub async fn remove_if_not_exist_plugin(&mut self, config: &Config) -> Result<(), LockErrors> {
+    pub async fn remove_if_not_exist_plugin(&mut self, config: &Config) -> Result<()> {
         trace!("Start fn: remove_if_not_exist_plugin");
         // Create list of keys to delete
         let mut keys_to_remove: Vec<String> = Vec::new();
@@ -208,12 +197,10 @@ impl Lock {
             let i = self.plugins.remove(i).unwrap();
             delete_file_by_path(&i.path).await?;
         }
-        self.save(&config.additions.path_to_lock)
-            .await
-            .map_err(|e| LockErrors::NotFound(e.to_string()))
+        self.save(&config.additions.path_to_lock).await
     }
 
-    pub async fn remove_if_not_exist_core(&mut self, config: &Config) -> Result<(), LockErrors> {
+    pub async fn remove_if_not_exist_core(&mut self, config: &Config) -> Result<()> {
         trace!("Start fn: remove_if_not_exist_core");
         if self.core.name != config.core.provider {
             debug!("Delete core: {:#?}", &self.core.name);
@@ -247,14 +234,14 @@ impl Lock {
     }
 }
 
-async fn _delete_file(name: &str, download_dir: &str) -> Result<(), LockErrors> {
+async fn _delete_file(name: &str, download_dir: &str) -> Result<()> {
     let file_name = format!("{}.jar", name);
     let file_path = PathBuf::from(download_dir).join(file_name);
     debug!("file_path: {:#?}", file_path);
     fs::remove_file(&file_path).await.map_err(|e| e.into())
 }
 
-async fn delete_file_by_path(path: &str) -> Result<(), LockErrors> {
+async fn delete_file_by_path(path: &str) -> Result<()> {
     info!("DELETE by path: {path}");
     if path.is_empty() {
         Ok(())

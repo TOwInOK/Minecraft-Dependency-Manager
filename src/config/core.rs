@@ -1,5 +1,17 @@
+use crate::{
+    config::models::{
+        cores::{
+            folia::Folia, paper::Paper, purpur::Purpur, vanilla::Vanilla, velocity::Velocity,
+            waterfall::Waterfall,
+        },
+        model::ModelCore,
+    },
+    errors::error::Result,
+};
 use log::info;
 use serde::{Deserialize, Serialize};
+
+use crate::downloader::hash::ChooseHash;
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 pub struct Core {
     // Ядро
@@ -60,5 +72,21 @@ impl Core {
             return true;
         };
         false
+    }
+
+    ///Check core and add it into list for download.
+    pub async fn get_link(&self) -> Result<(String, ChooseHash, String)> {
+        info!("Start to match provider of core");
+        match self.provider {
+            Provider::Vanilla => Vanilla::get_link(self).await,
+            Provider::Paper => Paper::get_link(self).await,
+            Provider::Folia => Folia::get_link(self).await,
+            Provider::Purpur => Purpur::get_link(self).await,
+            Provider::Fabric => todo!(),
+            Provider::Forge => todo!(),
+            Provider::NeoForge => todo!(),
+            Provider::Waterfall => Waterfall::get_link(self).await,
+            Provider::Velocity => Velocity::get_link(self).await,
+        }
     }
 }

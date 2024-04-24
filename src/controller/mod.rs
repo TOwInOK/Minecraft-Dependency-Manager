@@ -1,13 +1,10 @@
 use std::{sync::Arc, time::Duration};
 
 use log::{error, info, trace};
-use notify::recommended_watcher;
 use tokio::{sync::Mutex, time::sleep};
 use tokio_util::sync::CancellationToken;
 
-use crate::{
-    config::Config, downloader::Downloader, errors::error::LockErrors, lock::locker::Lock,
-};
+use crate::{config::Config, downloader::Downloader, errors::error::Result, lock::locker::Lock};
 
 pub struct Controller {
     config: Arc<Mutex<Config>>,
@@ -25,7 +22,6 @@ impl Controller {
             let lock = Arc::clone(&controller.lock);
             tokio::spawn(async move {
                 run(config, lock, &token).await;
-                // Assuming run() returns a Result or similar
             });
         }
 
@@ -34,7 +30,7 @@ impl Controller {
         watch_config_changes(&config, &token_clone).await
     }
 
-    async fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    async fn new() -> Result<Self> {
         // Load Config file
         let path = "./config.toml";
         let config = match Config::load_config(path).await {
@@ -68,13 +64,13 @@ impl Controller {
 
 /// Итерируем Lock и находим то чего нет в Config.
 /// Нет, удаляем в Lock.
-async fn remove_zombies(lock: &mut Lock, config: &Config) -> Result<(), LockErrors> {
+async fn remove_zombies(lock: &mut Lock, config: &Config) -> Result<()> {
     trace!("Start fn: remove_zombies");
     lock.remove_if_not_exist_plugin(config).await?;
     lock.remove_if_not_exist_core(config).await
 }
 
-async fn watcher(token: &CancellationToken) {
+async fn _watcher(token: &CancellationToken) {
     token.cancel();
     info!("Token Stopped {:#?}", token)
 }
@@ -116,7 +112,8 @@ async fn run(config: Arc<Mutex<Config>>, lock: Arc<Mutex<Lock>>, token: &Cancell
 
 /// Load downloader module.
 /// Always check config file.
-pub async fn watch_config_changes(config: &Config, token: &CancellationToken) {
+/// Use `token` for canceling minecraft task
+pub async fn watch_config_changes(config: &Config, _token: &CancellationToken) {
     // Load new Config file
     let path = config.additions.path_to_configs.to_owned();
     let config = match Config::load_config(&path).await {
@@ -130,6 +127,7 @@ pub async fn watch_config_changes(config: &Config, token: &CancellationToken) {
             Config::default()
         }
     };
+    info!("Load Config successfully!");
 
     // Load new lock
     let mut lock = Lock::default();
@@ -137,9 +135,11 @@ pub async fn watch_config_changes(config: &Config, token: &CancellationToken) {
         error!("{:?}", e);
         lock.create(&config.additions.path_to_configs)
             .await
-            .unwrap();
+            .unwrap_or_else(|e| error!("{:?}", e));
         lock.load(&config.additions.path_to_configs)
             .await
             .unwrap_or_else(|e| error!("{:?}", e));
     }
+    info!("Load Lock successfuly!");
+    // TODO: Add notify watcher
 }

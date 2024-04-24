@@ -2,9 +2,10 @@ use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::core::Core,
-    downloader::{hash::ChooseHash, models::model::ModelCore},
-    errors::error::DownloadErrors,
+    config::{core::Core, models::model::ModelCore},
+    downloader::hash::ChooseHash,
+    errors::error::{Error, Result},
+    not_found_build_error, not_found_version_error,
 };
 
 pub struct Paper();
@@ -44,7 +45,7 @@ pub struct Application {
 
 impl<T: ModelCorePaperFamily> ModelCore for T {
     //find build and push link
-    async fn get_link(core: &Core) -> Result<(String, ChooseHash, String), DownloadErrors> {
+    async fn get_link(core: &Core) -> Result<(String, ChooseHash, String)> {
         debug!("Start Get link");
         let core_name = Self::CORE_NAME;
         //get data from core
@@ -76,10 +77,7 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
                         e.to_owned(),
                     ))
                 } else {
-                    Err(DownloadErrors::DownloadCorrupt(format!(
-                        "No one build like: {} find",
-                        build
-                    )))
+                    not_found_build_error!(build)
                 }
             }
             None => {
@@ -101,7 +99,7 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
     }
 
     //Find version in version list, if exist give out version or give error
-    async fn find_version(version: Option<&str>) -> Result<String, DownloadErrors> {
+    async fn find_version(version: Option<&str>) -> Result<String> {
         debug!("Start find Version");
         let link = format!("https://api.papermc.io/v2/projects/{}", Self::CORE_NAME);
         let verlist: VersionList = reqwest::get(link).await?.json().await?;
@@ -111,17 +109,12 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
                 if verlist.contains(&ver.to_owned()) {
                     Ok(ver.to_owned())
                 } else {
-                    Err(DownloadErrors::DownloadCorrupt(format!(
-                        "No one version ->{}<- find",
-                        ver
-                    )))
+                    not_found_version_error!(ver)
                 }
             }
             None => match verlist.last() {
                 Some(e) => Ok(e.to_owned()),
-                None => Err(DownloadErrors::DownloadCorrupt(
-                    "No one version find".to_string(),
-                )),
+                None => not_found_version_error!("Latest"),
             },
         }
     }

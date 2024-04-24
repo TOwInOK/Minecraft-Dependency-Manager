@@ -1,75 +1,5 @@
 use thiserror::Error;
-#[derive(Error, Debug)]
-pub enum DownloadErrors {
-    #[error("Загрузка прекращена потому что: {0}")]
-    DownloadCorrupt(String),
-}
 
-// Реализация From для преобразования std::io::Error в DownloadErrors
-impl From<std::io::Error> for DownloadErrors {
-    fn from(error: std::io::Error) -> Self {
-        DownloadErrors::DownloadCorrupt(error.to_string())
-    }
-}
-
-#[derive(Error, Debug)]
-pub enum LockErrors {
-    #[error("Ошибка удаление файла: {0}")]
-    DeleteError(#[from] std::io::Error),
-    #[error("Не удалось найти: {0}")]
-    NotFound(String),
-}
-
-impl From<LockErrors> for DownloadErrors {
-    fn from(error: LockErrors) -> Self {
-        DownloadErrors::DownloadCorrupt(error.to_string())
-    }
-}
-
-#[derive(Error, Debug)]
-pub enum ConfigErrors {
-    #[error("Загрузка файла не была успешна: {0}")]
-    LoadCorrupt(String),
-    #[error("Ошибка чтения файла: {0}")]
-    ReadError(#[from] std::io::Error),
-    #[error("Ошибка парсинга TOML: {0}")]
-    ParseError(#[from] toml::de::Error),
-    #[error("Ошибка сериализация TOML: {0}")]
-    SerializeError(#[from] toml::ser::Error),
-}
-
-// Реализация From для преобразования DownloadErrors в ConfigErrors
-impl From<DownloadErrors> for ConfigErrors {
-    fn from(value: DownloadErrors) -> Self {
-        match value {
-            DownloadErrors::DownloadCorrupt(msg) => ConfigErrors::LoadCorrupt(msg),
-        }
-    }
-}
-
-// Реализация From для преобразования ConfigErrors в DownloadErrors
-impl From<ConfigErrors> for DownloadErrors {
-    fn from(value: ConfigErrors) -> Self {
-        match value {
-            ConfigErrors::LoadCorrupt(msg) => DownloadErrors::DownloadCorrupt(msg),
-            ConfigErrors::ReadError(msg) => DownloadErrors::DownloadCorrupt(msg.to_string()),
-            ConfigErrors::ParseError(msg) => DownloadErrors::DownloadCorrupt(msg.to_string()),
-            ConfigErrors::SerializeError(msg) => DownloadErrors::DownloadCorrupt(msg.to_string()),
-        }
-    }
-}
-
-impl From<reqwest::Error> for ConfigErrors {
-    fn from(value: reqwest::Error) -> Self {
-        ConfigErrors::LoadCorrupt(value.to_string())
-    }
-}
-
-impl From<reqwest::Error> for DownloadErrors {
-    fn from(value: reqwest::Error) -> Self {
-        DownloadErrors::DownloadCorrupt(value.to_string())
-    }
-}
 #[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum CompareHashError {
@@ -79,15 +9,78 @@ pub enum CompareHashError {
     SHA256(std::io::Error),
     #[error("Конвертация Md5 проведена не успешно : {0}")]
     MD5(std::io::Error),
+    #[error("Хэш отсутствует")]
+    None,
 }
 
-// Реализация From для преобразования DownloadErrors в ConfigErrors
-impl From<CompareHashError> for ConfigErrors {
-    fn from(value: CompareHashError) -> Self {
-        match value {
-            CompareHashError::SHA1(msg) => ConfigErrors::LoadCorrupt(msg.to_string()),
-            CompareHashError::SHA256(msg) => ConfigErrors::LoadCorrupt(msg.to_string()),
-            CompareHashError::MD5(msg) => ConfigErrors::LoadCorrupt(msg.to_string()),
-        }
-    }
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("Проблема с обработкой запроса: {0}")]
+    Reqwest(#[from] reqwest::Error),
+    #[error("Проблема с обработкой хэша: {0}")]
+    CompareHash(CompareHashError),
+    // #[error("Проблема с скачиванием файла: {0}")]
+    // Download(String),
+    #[error("Ошибка ввода/вывода: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Ошибка парсинга TOML: {0}")]
+    TomlParse(#[from] toml::de::Error),
+    #[error("Ошибка сериализация TOML: {0}")]
+    TomlSerialize(#[from] toml::ser::Error),
+    #[error("Не удалось найти: {0}")]
+    NotFound(String),
+    // #[error("Ошибка: {0}")]
+    // Any(#[from] Box<dyn std::error::Error>),
+}
+pub type Result<T> = std::result::Result<T, Error>;
+
+#[macro_export]
+macro_rules! not_found {
+    ($msg:expr) => {
+        Err(Error::NotFound($msg.to_string()))
+    };
+}
+
+#[macro_export]
+macro_rules! not_found_path {
+    ($arg:tt) => {
+        Err(Error::NotFound(format!(
+            "No path like: ->{}<-, exist",
+            $arg
+        )))
+    };
+}
+
+// #[macro_export]
+// macro_rules! download_error {
+//     ($($arg:tt)*) => {
+//         Err(Error::Download(format!($($arg)*)))
+//     };
+// }
+
+#[macro_export]
+macro_rules! not_found_build_error {
+    ($arg:tt) => {
+        Err(Error::NotFound(format!(
+            "No one build like: ->{}<- find",
+            $arg
+        )))
+    };
+}
+
+#[macro_export]
+macro_rules! not_found_version_error {
+    ($arg:tt) => {
+        Err(Error::NotFound(format!("No one version ->{}<- find", $arg)))
+    };
+}
+
+#[macro_export]
+macro_rules! not_found_plugin_error {
+    ($arg:tt) => {
+        Err(Error::NotFound(format!(
+            "No one plugin: ->{}<-, has found.",
+            $arg
+        )))
+    };
 }

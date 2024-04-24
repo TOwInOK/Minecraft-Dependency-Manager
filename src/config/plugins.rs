@@ -1,6 +1,12 @@
 use log::info;
 use serde::{Deserialize, Serialize};
 
+use crate::{
+    config::models::{extensions::modrinth::ModrinthData, model::ModelExtensions},
+    downloader::hash::ChooseHash,
+    errors::error::Result,
+};
+
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct Plugin {
     // Откуда качаем
@@ -56,5 +62,19 @@ impl Plugin {
             return true;
         };
         false
+    }
+
+    pub async fn get_link(
+        &self,
+        name: &str,
+        game_version: Option<&str>,
+    ) -> Result<(String, ChooseHash, String)> {
+        info!("Start to match provider of core");
+        match self.source {
+            Sources::Spigot => todo!(),
+            Sources::Hangar => todo!(),
+            Sources::Modrinth => ModrinthData::get_link(name, self, game_version).await,
+            Sources::CurseForge => todo!(),
+        }
     }
 }

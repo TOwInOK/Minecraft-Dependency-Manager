@@ -1,17 +1,8 @@
 pub mod hash;
-mod models;
 
-use crate::config::core::{Core, Provider};
-use crate::config::plugins::{Plugin, Sources};
 use crate::config::Config;
-use crate::downloader::models::cores::folia::Folia;
-use crate::downloader::models::cores::paper::Paper;
-use crate::downloader::models::cores::purpur::Purpur;
-use crate::downloader::models::cores::vanilla::Vanilla;
-use crate::downloader::models::cores::velocity::Velocity;
-use crate::downloader::models::cores::waterfall::Waterfall;
-use crate::downloader::models::model::ModelCore;
-use crate::errors::error::DownloadErrors;
+use crate::errors::error::Result;
+use crate::errors::error::{CompareHashError, Error};
 use crate::lock::locker::{ExistState, Lock};
 
 use log::{debug, info};
@@ -20,8 +11,6 @@ use std::io::Write;
 use std::path::Path;
 
 use self::hash::ChooseHash;
-use self::models::extensions::modrinth::ModrinthData;
-use self::models::model::ModelExtensions;
 
 #[derive(Debug)]
 pub struct Downloader<'config, 'lock> {
@@ -35,34 +24,16 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
     }
 
     ///Check and download plugins, mods, core
-    pub async fn check_and_download(&mut self) -> Result<(), DownloadErrors> {
+    pub async fn check_and_download(&mut self) -> Result<()> {
         info!("Start check fn");
         self.core_reqwest().await?;
         self.plugin_reqwest().await
     }
 
-    /////Core section
-
-    ///Check core and add it into list for download.
-    async fn get_core_link(core: &Core) -> Result<(String, ChooseHash, String), DownloadErrors> {
-        info!("Start to match provider of core");
-        match core.provider {
-            Provider::Vanilla => Vanilla::get_link(core).await,
-            Provider::Paper => Paper::get_link(core).await,
-            Provider::Folia => Folia::get_link(core).await,
-            Provider::Purpur => Purpur::get_link(core).await,
-            Provider::Fabric => todo!(),
-            Provider::Forge => todo!(),
-            Provider::NeoForge => todo!(),
-            Provider::Waterfall => Waterfall::get_link(core).await,
-            Provider::Velocity => Velocity::get_link(core).await,
-        }
-    }
-
     /// Make reqwest to check version and download core.
-    async fn core_reqwest(&mut self) -> Result<(), DownloadErrors> {
+    async fn core_reqwest(&mut self) -> Result<()> {
         //Find version to download
-        let (link, hash, version) = Self::get_core_link(&self.config.core).await?;
+        let (link, hash, version) = self.config.core.get_link().await?;
         let core_name = self.config.core.provider.get_name().await;
         debug!("Find {} link: {}, hash: {}", core_name, &link, &hash);
         info!("Start to download {}!", core_name);
@@ -95,7 +66,7 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
         link: String,
         hash: ChooseHash,
         version: String,
-    ) -> Result<(), DownloadErrors> {
+    ) -> Result<()> {
         if self.config.core.force_update {
             info!("Force update core!");
             return self.download_core(core_name, link, hash, version).await;
@@ -110,7 +81,7 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
         link: String,
         hash: ChooseHash,
         build: String,
-    ) -> Result<(), DownloadErrors> {
+    ) -> Result<()> {
         // download
         get_file(link, hash, &self.config.additions.path_to_core, name).await?;
         let path = format!("{}/{}.jar", self.config.additions.path_to_core, name);
@@ -125,7 +96,7 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
     ///////Plugin Section
 
     /// Make reqwest to check version and download [`Plugin`].
-    async fn plugin_reqwest(&mut self) -> Result<(), DownloadErrors> {
+    async fn plugin_reqwest(&mut self) -> Result<()> {
         if self.config.plugins.is_empty() {
             return Ok(());
         };
@@ -138,8 +109,9 @@ impl<'config, 'lock> Downloader<'config, 'lock> {
             if plugin.freeze().await {
                 continue;
             }
-            let (link, hash, version) =
-                get_plugin_link(&name, plugin, self.config.core.version.as_deref()).await?;
+            let (link, hash, version) = plugin
+                .get_link(&name, self.config.core.version.as_deref())
+                .await?;
 
             // Check exist plugin.
             match self.lock.exist_plugin(&name, &version).await {
@@ -207,7 +179,7 @@ async fn download_plugin(
     path_lock: &str,
     link: String,
     hash: ChooseHash,
-) -> Result<(), DownloadErrors> {
+) -> Result<()> {
     //This downloaded plugin replace current plugin.
     //download plugin
     get_file(link, hash, path_plugin, name).await?;
@@ -218,27 +190,9 @@ async fn download_plugin(
     Ok(())
 }
 
-///Check plugins and add it into list for download.
-async fn get_plugin_link(
-    name: &str,
-    plugin: &Plugin,
-    game_version: Option<&str>,
-) -> Result<(String, ChooseHash, String), DownloadErrors> {
-    match plugin.source {
-        Sources::Spigot => todo!(),
-        Sources::Hangar => todo!(),
-        Sources::Modrinth => ModrinthData::get_link(name, plugin, game_version).await,
-        Sources::CurseForge => todo!(),
-    }
-}
 /// Get and write file by path
-async fn get_file(
-    link: String,
-    hash: ChooseHash,
-    download_dir: &str,
-    name: &str,
-) -> Result<(), DownloadErrors> {
-    let response = reqwest::get(link).await?;
+async fn get_file(link: String, hash: ChooseHash, download_dir: &str, name: &str) -> Result<()> {
+    let response = reqwest::get(link).await.unwrap();
     let content = response.bytes().await?;
 
     // Check hash
@@ -255,8 +209,6 @@ async fn get_file(
         file.write_all(&content)?; //write
         Ok(())
     } else {
-        Err(DownloadErrors::DownloadCorrupt(
-            "Hash doesn't match".to_string(),
-        ))
+        Err(Error::CompareHash(CompareHashError::None))
     }
 }

@@ -2,9 +2,10 @@ use log::info;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::config::models::model::ModelExtensions;
 use crate::downloader::hash::ChooseHash;
-use crate::downloader::models::model::ModelExtensions;
-use crate::errors::error::DownloadErrors;
+use crate::errors::error::{Error, Result};
+use crate::not_found_plugin_error;
 
 ///# Example
 ///we have cdn like this: `https://cdn.modrinth.com/data/PROJECT_ID/versions/ID/NAME-LOADER-VERSION.jar`
@@ -43,10 +44,7 @@ impl ModelExtensions for ModrinthData {
         name: &str,
         plugin: &crate::config::plugins::Plugin,
         game_version: Option<&str>,
-    ) -> Result<
-        (String, crate::downloader::hash::ChooseHash, String),
-        crate::errors::error::DownloadErrors,
-    > {
+    ) -> Result<(String, crate::downloader::hash::ChooseHash, String)> {
         let loader = "fabric";
         let link: String = {
             match game_version {
@@ -67,10 +65,7 @@ impl ModelExtensions for ModrinthData {
         let modrinth_data: Vec<ModrinthData> = reqwest::get(link).await?.json().await?;
         let modrinth_data = match modrinth_data.first() {
             Some(e) => Ok(e),
-            None => Err(DownloadErrors::DownloadCorrupt(format!(
-                "No one plugin: {}, has found.",
-                name
-            ))),
+            None => not_found_plugin_error!(name),
         }?;
         Ok(modrinth_data
             .files

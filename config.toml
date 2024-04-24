@@ -8,7 +8,10 @@ force_update = false
 [plugins]
 [plugins.simple-voice-chat]
 [plugins.chunky]
-# [plugins.itemswapper]
+version = "ail5iPUK"
+channel = "Stable"
+freeze = false
+update = false
 
 [additions]
 # configPluguinsFrom = "git@github.com:TOwInOK/test.git"
