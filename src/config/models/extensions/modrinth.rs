@@ -47,6 +47,7 @@ impl ModelExtensions for ModrinthData {
     ) -> Result<(String, crate::downloader::hash::ChooseHash, String)> {
         let loader = "fabric";
         let link: String = {
+            // TODO: Make normal params!
             match game_version {
                 Some(game_version) => {
                     let channel = plugin.channel.get_str().await;

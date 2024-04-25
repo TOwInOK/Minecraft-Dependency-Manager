@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use log::{error, info, trace};
+use log::{debug, error, info, trace};
 use tokio::{sync::Mutex, time::sleep};
 use tokio_util::sync::CancellationToken;
 
@@ -21,11 +21,12 @@ impl Controller {
 
         let config = Arc::clone(&controller.config);
         let lock = Arc::clone(&controller.lock);
-        tokio::spawn(async move {
+        let c = tokio::spawn(async move {
             run(config, lock, &token).await;
         });
+        let _ = tokio::try_join!(c).unwrap();
 
-        watch_config_changes(&token_clone).await
+        // watch_config_changes(&token_clone).await
     }
 
     async fn new() -> Result<Self> {
@@ -91,14 +92,14 @@ async fn start(config: &Arc<Mutex<Config>>, lock: &Arc<Mutex<Lock>>) {
 
 async fn run(config: Arc<Mutex<Config>>, lock: Arc<Mutex<Lock>>, token: &CancellationToken) {
     // let sleep_cooldown = self.config.lock().await.additions.time_to_await;
-    let cooldown = 100;
+    let cooldown = 600f32;
     loop {
         info!("Start checking and download");
         start(&config, &lock).await;
 
         // Sleep for 5 minutes
         tokio::select! {
-            _ = sleep(Duration::from_millis(cooldown)) => {},
+            _ = sleep(Duration::from_secs_f32(cooldown)) => {},
             _ = token.cancelled() => break,
         };
     }

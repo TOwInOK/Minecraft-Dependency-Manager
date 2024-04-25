@@ -1,5 +1,13 @@
 [core]
-name = "vanilla"
-path = ""
+name = "purpur"
+version = "1.20.4"
+build = "2176"
+path = "core/purpur.jar"
 
-[plugins]
+[plugins.chunky]
+version = "iwsbfPGg"
+path = "plugins/chunky.jar"
+
+[plugins.simple-voice-chat]
+version = "B23zGLmw"
+path = "plugins/simple-voice-chat.jar"
