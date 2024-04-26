@@ -10,9 +10,9 @@
   5. Загружать конфигурационных файлов с git
 
 # Что реализуется
-  - [+] Обновление, загрузка плагинов.
-  - [+] Обновление, загрузка ядра.
-  - [+] Чтение конфигурационных файлов
+  - [x] Обновление, загрузка плагинов.
+  - [x] Обновление, загрузка ядра.
+  - [x] Чтение конфигурационных файлов
   - [ ] Обновление, загрузка модов.
   - [ ] Запуск minecraft
   - [ ] Бекапы
@@ -32,9 +32,9 @@
   5. Loading configuration files from git
 
 # What is being implemented
-  - [+] Updating, loading plugins.
-  - [+] Updating, loading cores.
-  - [+] Reading configuration files
+  - [x] Updating, loading plugins.
+  - [x] Updating, loading cores.
+  - [x] Reading configuration files
   - [ ] Updating, loading mods.
   - [ ] Running Minecraft
   - [ ] Backups
