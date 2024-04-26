@@ -3,7 +3,7 @@ pub mod core;
 mod models;
 pub mod plugins;
 
-use crate::{downloader::hash::ChooseHash, errors::error::Result};
+use crate::errors::error::Result;
 use additions::Additions;
 use core::Core;
 use log::info;
@@ -38,8 +38,5 @@ impl Config {
         info!("Конфигурация успешно инициализирована.");
 
         Ok(config)
-    }
-    pub async fn get_core_link(self) -> Result<(String, ChooseHash, String)> {
-        self.core.get_link().await
     }
 }
