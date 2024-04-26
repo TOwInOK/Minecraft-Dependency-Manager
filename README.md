@@ -52,6 +52,7 @@
     - Modrinth
     - CurseForge (not implemented)
   ## Cores
+    - Vanilla
     - PaperMC
     - Folia
     - PurpurMC
