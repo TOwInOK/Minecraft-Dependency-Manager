@@ -1,9 +1,9 @@
 [core]
 provider = "purpur"
-version = "1.20.4"
+version = "1.20.1"
 # build = "2160"
-freeze = false
-force_update = false
+# freeze = false
+# force_update = false
 
 [plugins]
 [plugins.simple-voice-chat]

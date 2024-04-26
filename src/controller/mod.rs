@@ -1,7 +1,8 @@
-use std::{sync::Arc, time::Duration};
+use std::{future::Future, pin::Pin, sync::Arc, time::Duration};
 
-use log::{debug, error, info, trace};
-use tokio::{sync::Mutex, time::sleep};
+use async_watcher::{notify::RecursiveMode, AsyncDebouncer};
+use log::{error, info, trace};
+use tokio::time::sleep;
 use tokio_util::sync::CancellationToken;
 
 use crate::{config::Config, downloader::Downloader, errors::error::Result, lock::locker::Lock};
@@ -9,48 +10,52 @@ use crate::{config::Config, downloader::Downloader, errors::error::Result, lock:
 const CONFIG_PATH: &str = "./config.toml";
 
 pub struct Controller {
-    config: Arc<Mutex<Config>>,
-    lock: Arc<Mutex<Lock>>,
+    config: Config,
+    lock: Lock,
 }
 
 impl Controller {
-    pub async fn init() {
-        let controller = Self::new().await.unwrap();
-        let token = CancellationToken::new();
-        let token_clone = token.clone();
+    pub fn init() -> Pin<Box<dyn Future<Output = ()> + Send>> {
+        Box::pin(async move {
+            let mut controller = Self::new().await.unwrap();
 
-        let config = Arc::clone(&controller.config);
-        let lock = Arc::clone(&controller.lock);
-        let c = tokio::spawn(async move {
-            run(config, lock, &token).await;
-        });
-        let _ = tokio::try_join!(c).unwrap();
+            info!("Start removing useless things");
+            if let Err(e) = remove_zombies(&mut controller.lock, &controller.config).await {
+                error!("{:?}", e);
+            }
+            let token = Arc::new(CancellationToken::new());
+            let token_clone = token.clone();
 
-        // watch_config_changes(&token_clone).await
+            let checker = tokio::spawn(async move {
+                run(&controller.config, &mut controller.lock, &token).await;
+            });
+            let finder = tokio::spawn(async move {
+                watch_config_changes(&token_clone).await;
+            });
+            let (_, _) = tokio::try_join!(checker, finder).unwrap();
+        })
     }
 
     async fn new() -> Result<Self> {
         // Load Config file
         let config = match Config::load_config(CONFIG_PATH).await {
-            Ok(config) => Arc::new(Mutex::new(config)),
+            Ok(config) => config,
             Err(e) => {
                 log::error!("Failed to load config: {}", e);
                 log::warn!("Loading default config");
-                Arc::new(Mutex::new(Config::default()))
+                Config::default()
             }
         };
 
         // Load lock
         let lock = {
             let mut lock = Lock::default();
-            if let Err(e) = lock.load(&config.lock().await.additions.path_to_lock).await {
+            if let Err(e) = lock.load(&config.additions.path_to_lock).await {
                 error!("{}", e);
-                lock.create(&config.lock().await.additions.path_to_lock)
-                    .await?;
-                lock.load(&config.lock().await.additions.path_to_lock)
-                    .await?;
+                lock.create(&config.additions.path_to_lock).await?;
+                lock.load(&config.additions.path_to_lock).await?;
             }
-            Arc::new(Mutex::new(lock))
+            lock
         };
 
         Ok(Self { config, lock })
@@ -65,37 +70,15 @@ async fn remove_zombies(lock: &mut Lock, config: &Config) -> Result<()> {
     lock.remove_if_not_exist_core(config).await
 }
 
-async fn _watcher(token: &CancellationToken) {
-    token.cancel();
-    info!("Token Stopped {:#?}", token)
-}
-
-/// Check zombies entities.
-/// Start download fn.
-async fn start(config: &Arc<Mutex<Config>>, lock: &Arc<Mutex<Lock>>) {
-    let config = config.lock().await;
-    let mut lock = lock.lock().await;
-
-    info!("Start removing useless things");
-    if let Err(e) = remove_zombies(&mut lock, &config).await {
-        error!("{:?}", e);
-    }
-
-    info!("Init downloader");
-    if let Err(e) = Downloader::init(&config, &mut lock)
-        .check_and_download()
-        .await
-    {
-        error!("{:?}", e);
-    }
-}
-
-async fn run(config: Arc<Mutex<Config>>, lock: Arc<Mutex<Lock>>, token: &CancellationToken) {
+async fn run(config: &Config, lock: &mut Lock, token: &CancellationToken) {
     // let sleep_cooldown = self.config.lock().await.additions.time_to_await;
     let cooldown = 600f32;
     loop {
         info!("Start checking and download");
-        start(&config, &lock).await;
+        info!("Init downloader");
+        if let Err(e) = Downloader::init(config, lock).check_and_download().await {
+            error!("{:?}", e);
+        }
 
         // Sleep for 5 minutes
         tokio::select! {
@@ -108,32 +91,22 @@ async fn run(config: Arc<Mutex<Config>>, lock: Arc<Mutex<Lock>>, token: &Cancell
 /// Load downloader module.
 /// Always check config file.
 /// Use `token` for canceling minecraft task
-pub async fn watch_config_changes(_token: &CancellationToken) {
-    // Load new Config file
-    let config = match Config::load_config(CONFIG_PATH).await {
-        Ok(config) => {
-            log::debug!("{:#?}", config);
-            config
-        }
-        Err(e) => {
-            log::error!("message: {}", e);
-            log::warn!("Происходит загрузка стандартного конфига");
-            Config::default()
-        }
-    };
-    info!("Load Config successfully!");
-
-    // Load new lock
-    let mut lock = Lock::default();
-    if let Err(e) = lock.load(&config.additions.path_to_lock).await {
-        error!("{:?}", e);
-        lock.create(&config.additions.path_to_lock)
-            .await
-            .unwrap_or_else(|e| error!("{:?}", e));
-        lock.load(&config.additions.path_to_lock)
-            .await
-            .unwrap_or_else(|e| error!("{:?}", e));
+pub async fn watch_config_changes(token: &CancellationToken) {
+    trace!("Start Watch Config");
+    // initialize the debouncer
+    let (mut tx, mut rx) = AsyncDebouncer::new_with_channel(Duration::from_millis(200), None)
+        .await
+        .unwrap();
+    info!("Get debouncer");
+    // register path to watch
+    tx.watcher()
+        .watch(CONFIG_PATH.as_ref(), RecursiveMode::NonRecursive)
+        .unwrap();
+    info!("Fill debouncer");
+    // wait for events
+    while let Some(event) = rx.recv().await {
+        trace!("event: {:?}", event);
+        token.cancel();
+        Controller::init().await
     }
-    info!("Load Lock successfuly!");
-    // TODO: Add notify watcher
 }
