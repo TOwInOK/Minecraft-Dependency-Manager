@@ -12,6 +12,9 @@ pub struct Additions {
 
 impl Additions {
     pub fn new(config_plugins_from: Option<String>, key: Option<String>) -> Self {
-        Self { config_plugins_from, key }
+        Self {
+            config_plugins_from,
+            key,
+        }
     }
 }

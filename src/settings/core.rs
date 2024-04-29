@@ -1,3 +1,4 @@
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::errors::error::Result;
@@ -83,14 +84,15 @@ impl Core {
     pub async fn download(&self, lock: &mut Lock) -> Result<()> {
         let (link, hash, build) = self.get_link().await?;
         if let Some(e) = lock.core().build() {
-            if *e == build
-                && self.build() == lock.core().build()
-                && self.provider() == lock.core().provider()
-            {
+            debug!("lock build: {} / build: {}", &e, &build);
+            if *e == build && !self.force_update || self.freeze {
+                info!("Ядро не нуждается в обновлении");
                 return Ok(());
             }
         }
-        let file = self.get_file(link, hash).await?;
+        let file = self
+            .get_file(self.provider.as_str().to_string(), link, hash)
+            .await?;
         self.save_bytes(file, self.provider().as_str()).await?;
         *lock.core_mut() = CoreMeta::new(self.provider.clone(), self.version.clone(), Some(build));
         lock.save().await

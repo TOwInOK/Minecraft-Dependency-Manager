@@ -59,11 +59,11 @@ impl Settings {
     pub fn set_plugins(&mut self, plugins: Option<Plugins>) {
         self.plugins = plugins;
     }
-    
+
     pub fn additions(&self) -> Option<&Additions> {
         self.additions.as_ref()
     }
-    
+
     pub fn set_additions(&mut self, additions: Option<Additions>) {
         self.additions = additions;
     }

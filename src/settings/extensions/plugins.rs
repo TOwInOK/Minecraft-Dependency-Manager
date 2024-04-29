@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::errors::error::Result;
@@ -22,6 +23,7 @@ impl Plugins {
     }
 
     pub async fn download_all(&self, game_version: &str, lock: &mut Lock) -> Result<()> {
+        debug!("Plugins list: {:#?}", self.0);
         for (name, plugin) in self.0.iter() {
             // Получение ссылки, хэша и билда
             let (link, hash, build) = plugin.get_link(name, game_version).await?;
@@ -29,15 +31,16 @@ impl Plugins {
             if let Some(e) = lock.plugins().get(name) {
                 match e.version() {
                     Some(e) => {
-                        if *e == build {
+                        if *e == build && !plugin.force_update() || plugin.freeze() {
+                            info!("Плагин {} не нуждается в обновлении", name);
                             return Ok(());
                         }
                     }
-                    None => continue,
+                    None => {}
                 }
             }
             // Получение файла
-            let file = plugin.get_file(link, hash).await?;
+            let file = plugin.get_file(name.to_string(), link, hash).await?;
             // Сохранение
             plugin.save_bytes(file, name).await?;
             // Добавление в Lock

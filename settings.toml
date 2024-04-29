@@ -1,5 +1,5 @@
 [core]
-Provider = "vanilla"
+Provider = "paper"
 Version = "Latest"
 Freeze = false
 ForceUpdate = false
