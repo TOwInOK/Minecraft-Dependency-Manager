@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::errors::error::Result;
+use crate::lock::ext::ExtensionMeta;
 use crate::models::extensions::modrinth::ModrinthData;
 use crate::tr::hash::ChooseHash;
 use crate::tr::model::extension::ModelExtensions;
@@ -44,6 +45,7 @@ impl Plugin {
     pub fn force_update(&self) -> bool {
         self.force_update
     }
+    /// Get link from models.
     pub fn get_link<'a>(
         &'a self,
         name: &'a str,
@@ -77,4 +79,14 @@ pub enum Channels {
     Release,
     Beta,
     Alpha,
+}
+
+impl Channels {
+    pub async fn get_str(&self) -> &'static str {
+        match self {
+            Channels::Release => "release",
+            Channels::Beta => "beta",
+            Channels::Alpha => "alpha",
+        }
+    }
 }

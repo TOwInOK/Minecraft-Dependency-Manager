@@ -15,3 +15,7 @@ source = "modrinth"
 channel = "release"
 freeze = false
 force_update = false
+
+[additions]
+config_plugins_from = "GitHub.link"
+key = "GitHub.key"

@@ -46,7 +46,7 @@ pub trait Save {
                     return not_found_path!(Self::PATH);
                 }
                 // Добавляем имя к пути
-                let path_to_file = path_to_dir.join(name);
+                let path_to_file = path_to_dir.join(format!("{}.jar", name));
 
                 // Откроем для записи
                 let mut file = File::create(path_to_file).await?;

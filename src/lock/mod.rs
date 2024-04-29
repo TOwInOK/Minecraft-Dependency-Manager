@@ -1,5 +1,5 @@
 mod core;
-mod ext;
+pub mod ext;
 
 use serde::{Deserialize, Serialize};
 
@@ -20,6 +20,22 @@ pub struct Lock {
 impl Lock {
     fn update_core(&mut self, core: Core) {
         self.core = core.into();
+    }
+
+    pub fn core(&self) -> &CoreMeta {
+        &self.core
+    }
+
+    pub fn plugins(&self) -> &HashMap<String, ExtensionMeta> {
+        &self.plugins
+    }
+
+    pub fn core_mut(&mut self) -> &mut CoreMeta {
+        &mut self.core
+    }
+
+    pub fn plugins_mut(&mut self) -> &mut HashMap<String, ExtensionMeta> {
+        &mut self.plugins
     }
 }
 
