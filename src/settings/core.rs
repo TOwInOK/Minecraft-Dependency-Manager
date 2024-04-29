@@ -1,0 +1,85 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
+#[serde(rename_all = "PascalCase")]
+pub struct Core {
+    // Ядро
+    #[serde(default)]
+    provider: Provider,
+    // Версия ядра
+    #[serde(default = "version")]
+    version: String,
+    // Версия билда ядра
+    #[serde(default)]
+    build: Option<String>,
+    // Приостановить обновление
+    #[serde(default)]
+    freeze: bool,
+    // Нужно обновить
+    #[serde(default)]
+    force_update: bool,
+}
+
+fn version() -> String {
+    // warn!("We use default core path!");
+    "Latest".to_string()
+}
+
+impl Core {
+    pub fn provider(&self) -> &Provider {
+        &self.provider
+    }
+
+    pub fn version(&self) -> &str {
+        self.version.as_ref()
+    }
+
+    pub fn build(&self) -> Option<&String> {
+        self.build.as_ref()
+    }
+
+    pub fn freeze(&self) -> bool {
+        self.freeze
+    }
+
+    pub fn force_update(&self) -> bool {
+        self.force_update
+    }
+
+    pub fn set_provider(&mut self, provider: Provider) {
+        self.provider = provider;
+    }
+
+    pub fn set_version(&mut self, version: String) {
+        self.version = version;
+    }
+
+    pub fn set_build(&mut self, build: Option<String>) {
+        self.build = build;
+    }
+
+    pub fn set_freeze(&mut self, freeze: bool) {
+        self.freeze = freeze;
+    }
+
+    pub fn set_force_update(&mut self, force_update: bool) {
+        self.force_update = force_update;
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum Provider {
+    #[default]
+    Vanilla, // done
+    Paper,  // done
+    Folia,  // done
+    Purpur, // in work, good api
+    Fabric, // in work, api with out hash
+    //https://meta.fabricmc.net/v2/versions/game <- version check /v2/versions/intermediary give only stable
+    // or https://meta.fabricmc.net/v1/versions/game/1.14.4. Если нет версии, ответ пуст.
+    Forge,     //no api
+    NeoForge,  //worst api
+    Waterfall, // done
+    Velocity,  // done
+}

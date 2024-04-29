@@ -1,5 +1,8 @@
+use crate::errors::error::CompareHashError;
+use crate::errors::error::{Error, Result};
 use md5::Md5;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 use sha1::Digest as Digest1;
 use sha1::Sha1;
 use sha2::Digest as Digest256;
@@ -15,7 +18,10 @@ pub enum ChooseHash {
 }
 
 impl ChooseHash {
-    pub async fn calculate_hash(&self, mut reader: impl tokio::io::AsyncRead + Unpin) -> bool {
+    pub async fn calculate_hash(
+        &self,
+        mut reader: impl tokio::io::AsyncRead + Unpin,
+    ) -> Result<()> {
         match self {
             ChooseHash::SHA1(e) => {
                 let mut hashed = <Sha1 as Digest1>::new();
@@ -27,7 +33,11 @@ impl ChooseHash {
                     hashed.update(&buffer[..n]);
                 }
                 let result = hashed.finalize();
-                e.eq(&format!("{:x}", result))
+                if e.eq(&format!("{:x}", result)) {
+                    Ok(())
+                } else {
+                    Err(Error::CompareHash(CompareHashError::HashNotCompare()))
+                }
             }
             ChooseHash::SHA256(e) => {
                 let mut hashed = <Sha256 as Digest256>::new();
@@ -39,7 +49,11 @@ impl ChooseHash {
                     hashed.update(&buffer[..n]);
                 }
                 let result = hashed.finalize();
-                e.eq(&format!("{:x}", result))
+                if e.eq(&format!("{:x}", result)) {
+                    Ok(())
+                } else {
+                    Err(Error::CompareHash(CompareHashError::HashNotCompare()))
+                }
             }
             ChooseHash::MD5(e) => {
                 let mut hashed = <Md5 as md5::Digest>::new();
@@ -51,9 +65,13 @@ impl ChooseHash {
                     hashed.update(&buffer[..n]);
                 }
                 let result = hashed.finalize();
-                e.eq(&format!("{:x}", result))
+                if e.eq(&format!("{:x}", result)) {
+                    Ok(())
+                } else {
+                    Err(Error::CompareHash(CompareHashError::HashNotCompare()))
+                }
             }
-            ChooseHash::None => true,
+            ChooseHash::None => Ok(()),
         }
     }
 }

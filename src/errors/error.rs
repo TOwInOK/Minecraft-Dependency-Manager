@@ -1,8 +1,9 @@
 use thiserror::Error;
 
-#[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum CompareHashError {
+    #[error("Хэш не совпадает")]
+    HashNotCompare(),
     #[error("Конвертация Sha1 проведена не успешно : {0}")]
     SHA1(std::io::Error),
     #[error("Конвертация Sha256 проведена не успешно : {0}")]
@@ -43,7 +44,7 @@ macro_rules! not_found {
 
 #[macro_export]
 macro_rules! not_found_path {
-    ($arg:tt) => {
+    ($arg:expr) => {
         Err(Error::NotFound(format!(
             "No path like: ->{}<-, exist",
             $arg

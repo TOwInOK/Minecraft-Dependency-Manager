@@ -1,11 +1,10 @@
-use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::{core::Core, models::model::ModelCore},
-    downloader::hash::ChooseHash,
     errors::error::{Error, Result},
     not_found_build_error, not_found_version_error,
+    settings::core::Core,
+    tr::{hash::ChooseHash, model::core::ModelCore},
 };
 
 pub struct Paper();
@@ -44,32 +43,30 @@ pub struct Application {
 }
 
 impl<T: ModelCorePaperFamily> ModelCore for T {
+    type Link = String;
+    type Version = String;
     //find build and push link
     async fn get_link(core: &Core) -> Result<(String, ChooseHash, String)> {
-        debug!("Start Get link");
         let core_name = Self::CORE_NAME;
         //get data from core
-        let build = core.build.as_deref();
-        let version = core.version.as_deref();
+        let build = core.build();
+        let version = core.version();
         //find link and version
-        let version = Self::find_version(version).await?;
+        let version = find_version(version, core_name).await?;
         let verlink = format!(
             "https://api.papermc.io/v2/projects/{}/versions/{}",
             core_name, version
         );
-        info!("Get BuildList");
         let build_list: BuildList = reqwest::get(verlink).await?.json().await?;
         let build_list = build_list.builds.as_slice();
         match build {
             Some(e) => {
                 let build: u16 = e.parse().unwrap();
                 if build_list.contains(&build) {
-                    info!("Find build, download");
                     let buildlink = format!(
                         "https://api.papermc.io/v2/projects/{}/versions/{}/builds/{}",
                         core_name, version, build
                     );
-                    info!("Get Url");
                     let url: Url = reqwest::get(&buildlink).await?.json().await?;
                     Ok((
                         format!("{}/downloads/{}", buildlink, url.downloads.application.name),
@@ -81,9 +78,7 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
                 }
             }
             None => {
-                info!("Download latest build");
                 let lastbuild = build_list.last().unwrap();
-                info!("Get Url");
                 let buildlink = format!(
                     "https://api.papermc.io/v2/projects/{}/versions/{}/builds/{}",
                     core_name, version, lastbuild
@@ -97,25 +92,26 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
             }
         }
     }
+}
 
-    //Find version in version list, if exist give out version or give error
-    async fn find_version(version: Option<&str>) -> Result<String> {
-        debug!("Start find Version");
-        let link = format!("https://api.papermc.io/v2/projects/{}", Self::CORE_NAME);
-        let verlist: VersionList = reqwest::get(link).await?.json().await?;
-        let verlist = verlist.versions;
-        match version {
-            Some(ver) => {
-                if verlist.contains(&ver.to_owned()) {
-                    Ok(ver.to_owned())
-                } else {
-                    not_found_version_error!(ver)
-                }
+//Find version in version list, if exist give out version or give error
+async fn find_version(version: &str, core_name: &str) -> Result<String> {
+    let link = format!("https://api.papermc.io/v2/projects/{}", core_name);
+    let version_list = {
+        let version_list: VersionList = reqwest::get(link).await?.json().await?;
+        version_list.versions
+    };
+    match version {
+        "Latest" => match version_list.last() {
+            Some(e) => Ok(e.to_owned()),
+            None => not_found_version_error!("Latest"),
+        },
+        _ => {
+            if version_list.contains(&version.to_string()) {
+                Ok(version.to_owned())
+            } else {
+                not_found_version_error!(version)
             }
-            None => match verlist.last() {
-                Some(e) => Ok(e.to_owned()),
-                None => not_found_version_error!("Latest"),
-            },
         }
     }
 }

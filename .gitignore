@@ -1,5 +1,4 @@
 /target
-/core
-/plugins/
-minecraft_addon_controller.exe
-config.lock
+Cargo.lock
+lock.toml
+/.vscode

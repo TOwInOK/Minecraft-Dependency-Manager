@@ -1,13 +1,9 @@
 use crate::{
-    config::{core::Core, models::model::ModelCore},
-    downloader::hash::ChooseHash,
     errors::error::{Error, Result},
     not_found_version_error,
+    settings::core::Core,
+    tr::{hash::ChooseHash, model::core::ModelCore},
 };
-use log::debug;
-use log::info;
-use log::trace;
-use log::warn;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -52,7 +48,7 @@ pub enum TypeOfVersion {
 
 impl Default for TypeOfVersion {
     fn default() -> Self {
-        warn!("Use default fn of TypeOfVersion");
+        // warn!("Use default fn of TypeOfVersion");
         TypeOfVersion::Release
     }
 }
@@ -76,50 +72,49 @@ pub struct Server {
 }
 
 impl ModelCore for Vanilla {
+    type Link = OuterLink;
+    type Version = VersionID;
     /// Making request to mojang api and find the link to download minecraft.jar
     async fn get_link(core: &Core) -> Result<(OuterLink, ChooseHash, VersionID)> {
-        let version = core.version.as_deref();
-        debug!("Start find fn with version: {:#?}", version);
+        let version = core.version();
+        // debug!("Start find fn with version: {:#?}", version);
         let link = find_version(version).await?;
-        trace!("get link: {}", &link.0);
-        trace!("get link: {}", &link.0);
+        // trace!("get link: {}", &link.0);
         let response = reqwest::get(link.0).await?;
-        trace!("get response, status of request: {}", &response.status());
+        // trace!("get response, status of request: {}", &response.status());
         let download_section: DownloadSection = response.json().await?;
-        debug!("Find jar to download!");
-        debug!("Check body: {:#?}", &download_section.downloads.server);
+        // debug!("Find jar to download!");
+        // debug!("Check body: {:#?}", &download_section.downloads.server);
         Ok((
             download_section.downloads.server.url,
             ChooseHash::SHA1(download_section.downloads.server.sha1),
             link.1,
         ))
     }
-
-    ///Return `url` for get a json which contain links of all versions
-    async fn find_version(_version: Option<&str>) -> Result<String> {
-        todo!()
-    }
 }
 
 ///Return `url` which get a json that contain links of all versions
-async fn find_version(version: Option<&str>) -> Result<(String, String)> {
+async fn find_version(version: &str) -> Result<(String, String)> {
     const LINK: &str = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
-    trace!("Start find version of core!");
+    // trace!("Start find version of core!");
     let response = reqwest::get(LINK).await?;
     let vanilla: Vanilla = response.json().await?;
-    let local_version: &str = match &version {
-        Some(e) => e,
-        None => &vanilla.latest.release,
+    let local_version = {
+        if version == "Latest" {
+            vanilla.latest.release
+        } else {
+            version.to_string()
+        }
     };
-    info!("Need to find: {}", &local_version);
+    // info!("Need to find: {}", &local_version);
 
     // Use a temporary variable to hold the found version and URL
     let found_version_and_url = vanilla
         .versions
         .iter()
-        .find(|x| x.version.contains(local_version))
+        .find(|x| x.version.contains(&local_version))
         .map(|x| {
-            info!("find version: {}", &x.version);
+            // info!("find version: {}", &x.version);
             let c = x.version.clone();
             (c, x.url.clone())
         });

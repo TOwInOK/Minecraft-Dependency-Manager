@@ -1,0 +1,17 @@
+[core]
+Provider = "vanilla"
+Version = "Latest"
+Freeze = false
+ForceUpdate = false
+
+[plugins.chunky]
+source = "modrinth"
+channel = "release"
+freeze = false
+force_update = false
+
+[plugins.simple-voice-chat]
+source = "modrinth"
+channel = "release"
+freeze = false
+force_update = false
