@@ -44,6 +44,7 @@ impl Plugins {
             lock.plugins_mut().insert(name.to_string(), {
                 ExtensionMeta::new(Some(build), format!("./plugins/{}.jar", name))
             });
+            // Используем на каждой итерации, так как может возникнуть ошибка.
             lock.save().await?;
         }
         Ok(())

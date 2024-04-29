@@ -1,5 +1,18 @@
 use serde::{Deserialize, Serialize};
 
+use crate::errors::error::Result;
+use crate::lock::core::CoreMeta;
+use crate::lock::Lock;
+use crate::models::cores::folia::Folia;
+use crate::models::cores::paper::Paper;
+use crate::models::cores::purpur::Purpur;
+use crate::models::cores::vanilla::Vanilla;
+use crate::models::cores::velocity::Velocity;
+use crate::models::cores::waterfall::Waterfall;
+use crate::tr::hash::ChooseHash;
+use crate::tr::model::core::ModelCore;
+use crate::tr::{download::Download, save::Save};
+
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Core {
@@ -65,6 +78,36 @@ impl Core {
     pub fn set_force_update(&mut self, force_update: bool) {
         self.force_update = force_update;
     }
+
+    /// Скачиваем `Core` и сохраняем его по стандартному пути.
+    pub async fn download(&self, lock: &mut Lock) -> Result<()> {
+        let (link, hash, build) = self.get_link().await?;
+        if let Some(e) = lock.core().build() {
+            if *e == build
+                && self.build() == lock.core().build()
+                && self.provider() == lock.core().provider()
+            {
+                return Ok(());
+            }
+        }
+        let file = self.get_file(link, hash).await?;
+        self.save_bytes(file, self.provider().as_str()).await?;
+        *lock.core_mut() = CoreMeta::new(self.provider.clone(), self.version.clone(), Some(build));
+        lock.save().await
+    }
+    async fn get_link(&self) -> Result<(String, ChooseHash, String)> {
+        match self.provider {
+            Provider::Vanilla => Vanilla::get_link(self).await,
+            Provider::Paper => Paper::get_link(self).await,
+            Provider::Folia => Folia::get_link(self).await,
+            Provider::Purpur => Purpur::get_link(self).await,
+            Provider::Fabric => todo!(),
+            Provider::Forge => todo!(),
+            Provider::NeoForge => todo!(),
+            Provider::Waterfall => Waterfall::get_link(self).await,
+            Provider::Velocity => Velocity::get_link(self).await,
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
@@ -82,4 +125,25 @@ pub enum Provider {
     NeoForge,  //worst api
     Waterfall, // done
     Velocity,  // done
+}
+
+impl Provider {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Provider::Vanilla => "vanilla",
+            Provider::Paper => "paper",
+            Provider::Folia => "folia",
+            Provider::Purpur => "purpur",
+            Provider::Fabric => "fabric",
+            Provider::Forge => "forge",
+            Provider::NeoForge => "neoforge",
+            Provider::Waterfall => "waterfall",
+            Provider::Velocity => "velocity",
+        }
+    }
+}
+
+impl Download for Core {}
+impl Save for Core {
+    const PATH: &'static str = "./";
 }

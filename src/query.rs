@@ -8,7 +8,7 @@ pub struct Query {
 }
 impl Query {
     /// Check Data and add it if is't same
-    async fn push(&mut self, name: String, data: QueryData) {
+    async fn _push(&mut self, name: String, data: QueryData) {
         match self.query.get_mut(&name) {
             Some(e) => {
                 if data != *e {

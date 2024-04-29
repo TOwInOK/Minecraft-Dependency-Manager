@@ -12,6 +12,28 @@ pub struct CoreMeta {
     build: Option<String>,
 }
 
+impl CoreMeta {
+    pub fn new(provider: Provider, version: String, build: Option<String>) -> Self {
+        Self {
+            provider,
+            version,
+            build,
+        }
+    }
+
+    pub fn provider(&self) -> &Provider {
+        &self.provider
+    }
+
+    pub fn version(&self) -> &str {
+        &self.version
+    }
+
+    pub fn build(&self) -> Option<&String> {
+        self.build.as_ref()
+    }
+}
+
 impl From<Core> for CoreMeta {
     fn from(value: Core) -> Self {
         Self {

@@ -34,9 +34,10 @@ struct Version {
 }
 
 ///Minecraft types of version
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 enum TypeOfVersion {
     #[serde(rename = "release")]
+    #[default]
     Release,
     #[serde(rename = "snapshot")]
     Snapshot,
@@ -45,14 +46,6 @@ enum TypeOfVersion {
     #[serde(rename = "old_alpha")]
     OldAlpha,
 }
-
-impl Default for TypeOfVersion {
-    fn default() -> Self {
-        // warn!("Use default fn of TypeOfVersion");
-        TypeOfVersion::Release
-    }
-}
-
 //Area of download from list of details about version
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

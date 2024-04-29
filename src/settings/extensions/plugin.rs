@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use crate::errors::error::Result;
-use crate::lock::ext::ExtensionMeta;
 use crate::models::extensions::modrinth::ModrinthData;
 use crate::tr::hash::ChooseHash;
 use crate::tr::model::extension::ModelExtensions;
@@ -46,18 +45,16 @@ impl Plugin {
         self.force_update
     }
     /// Get link from models.
-    pub fn get_link<'a>(
+    pub async fn get_link<'a>(
         &'a self,
         name: &'a str,
         game_version: &'a str,
-    ) -> impl std::future::Future<Output = Result<(String, ChooseHash, String)>> + Send + 'a {
-        async move {
-            match self.source {
-                Sources::Spigot => todo!(),
-                Sources::Hangar => todo!(),
-                Sources::Modrinth => ModrinthData::get_link(self, name, game_version).await,
-                Sources::CurseForge => todo!(),
-            }
+    ) -> Result<(String, ChooseHash, String)> {
+        match self.source {
+            Sources::Spigot => todo!(),
+            Sources::Hangar => todo!(),
+            Sources::Modrinth => ModrinthData::get_link(self, name, game_version).await,
+            Sources::CurseForge => todo!(),
         }
     }
 }
