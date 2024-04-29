@@ -12,30 +12,30 @@ type VersionID = String;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Vanilla {
-    pub latest: Latest,
-    pub versions: Vec<Version>,
+    latest: Latest,
+    versions: Vec<Version>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Latest {
-    pub release: String,
-    pub snapshot: String,
+struct Latest {
+    release: String,
+    snapshot: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Version {
+struct Version {
     #[serde(rename = "id")]
-    pub version: String,
+    version: String,
 
     #[serde(rename = "type")]
-    pub type_field: TypeOfVersion,
+    type_field: TypeOfVersion,
 
-    pub url: String,
+    url: String,
 }
 
 ///Minecraft types of version
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum TypeOfVersion {
+enum TypeOfVersion {
     #[serde(rename = "release")]
     Release,
     #[serde(rename = "snapshot")]
@@ -56,19 +56,19 @@ impl Default for TypeOfVersion {
 //Area of download from list of details about version
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct DownloadSection {
-    pub downloads: Downloads,
+struct DownloadSection {
+    downloads: Downloads,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Downloads {
-    pub server: Server,
+struct Downloads {
+    server: Server,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Server {
-    pub sha1: String,
-    pub url: String,
+struct Server {
+    sha1: String,
+    url: String,
 }
 
 impl ModelCore for Vanilla {

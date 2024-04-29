@@ -18,28 +18,28 @@ pub trait ModelCorePaperFamily {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct VersionList {
-    pub versions: Vec<String>,
+struct VersionList {
+    versions: Vec<String>,
 }
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct BuildList {
-    pub builds: Vec<u16>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Url {
-    pub downloads: Downloads,
+struct BuildList {
+    builds: Vec<u16>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Downloads {
-    pub application: Application,
+struct Url {
+    downloads: Downloads,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Application {
-    pub name: String,
-    pub sha256: String,
+struct Downloads {
+    application: Application,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Application {
+    name: String,
+    sha256: String,
 }
 
 impl<T: ModelCorePaperFamily> ModelCore for T {

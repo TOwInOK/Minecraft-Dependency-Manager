@@ -14,29 +14,29 @@ use crate::tr::model::extension::ModelExtensions;
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ModrinthData {
     //Always change ich version
-    pub id: String,
+    id: String,
     //Stable token.
-    pub project_id: String,
-    pub files: Vec<File>,
-    pub dependencies: Vec<Dependency>,
+    project_id: String,
+    files: Vec<File>,
+    dependencies: Vec<Dependency>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct File {
-    pub hashes: Hashes,
-    pub url: String,
+    hashes: Hashes,
+    url: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct Hashes {
-    pub sha1: String,
-    pub sha512: String,
+    sha1: String,
+    sha512: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct Dependency {
-    pub project_id: String,
-    pub dependency_type: String,
+    project_id: String,
+    dependency_type: String,
 }
 
 impl ModelExtensions for ModrinthData {

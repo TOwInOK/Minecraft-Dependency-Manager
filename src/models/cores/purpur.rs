@@ -11,24 +11,24 @@ pub struct Purpur {}
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct VersionList {
-    pub versions: Vec<String>,
+struct VersionList {
+    versions: Vec<String>,
 }
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct BuildList {
-    pub builds: Builds,
+struct BuildList {
+    builds: Builds,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Builds {
-    pub latest: String,
-    pub all: Vec<String>,
+struct Builds {
+    latest: String,
+    all: Vec<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct FileHash {
-    pub md5: String,
+struct FileHash {
+    md5: String,
 }
 
 // Download
