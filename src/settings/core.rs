@@ -1,5 +1,9 @@
+use std::sync::Arc;
+
+use indicatif::MultiProgress;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
+use tokio::sync::Mutex;
 
 use crate::errors::error::Result;
 use crate::lock::core::CoreMeta;
@@ -13,6 +17,8 @@ use crate::models::cores::waterfall::Waterfall;
 use crate::tr::hash::ChooseHash;
 use crate::tr::model::core::ModelCore;
 use crate::tr::{download::Download, save::Save};
+
+use super::extensions::plugin::Plugin;
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 #[serde(rename_all = "PascalCase")]
@@ -81,8 +87,13 @@ impl Core {
     }
 
     /// Скачиваем `Core` и сохраняем его по стандартному пути.
-    pub async fn download(&self, lock: &mut Lock) -> Result<()> {
+    pub async fn download(
+        &self,
+        lock: &Arc<Mutex<Lock>>,
+        mpb: &Arc<Mutex<MultiProgress>>,
+    ) -> Result<()> {
         let (link, hash, build) = self.get_link().await?;
+        let mut lock = lock.lock().await;
         if let Some(e) = lock.core().build() {
             debug!("lock build: {} / build: {}", &e, &build);
             if *e == build && !self.force_update || self.freeze {
@@ -90,10 +101,9 @@ impl Core {
                 return Ok(());
             }
         }
-        let file = self
-            .get_file(self.provider.as_str().to_string(), link, hash)
-            .await?;
-        self.save_bytes(file, self.provider().as_str()).await?;
+        let mpb = mpb.lock().await;
+        let file = Core::get_file(self.provider.as_str().to_string(), link, hash, &mpb).await?;
+        Plugin::save_bytes(file, self.provider().as_str()).await?;
         *lock.core_mut() = CoreMeta::new(self.provider.clone(), self.version.clone(), Some(build));
         lock.save().await
     }

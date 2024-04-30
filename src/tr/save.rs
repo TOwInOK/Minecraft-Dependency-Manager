@@ -33,7 +33,6 @@ pub trait Save {
         }
     }
     fn save_bytes(
-        &self,
         bytes: Bytes,
         name: &str,
     ) -> impl std::future::Future<Output = Result<()>> + Send {

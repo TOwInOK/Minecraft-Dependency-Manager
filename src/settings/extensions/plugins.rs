@@ -1,7 +1,10 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
-use log::{debug, info};
+use futures_util::future::join_all;
+use indicatif::{MultiProgress, ProgressBar, ProgressState, ProgressStyle};
 use serde::{Deserialize, Serialize};
+use tokio::sync::Mutex;
 
 use crate::errors::error::Result;
 use crate::lock::ext::ExtensionMeta;
@@ -22,34 +25,52 @@ impl Plugins {
         &self.0
     }
 
-    pub async fn download_all(&self, game_version: &str, lock: &mut Lock) -> Result<()> {
-        debug!("Plugins list: {:#?}", self.0);
-        for (name, plugin) in self.0.iter() {
-            // Получение ссылки, хэша и билда
-            let (link, hash, build) = plugin.get_link(name, game_version).await?;
-            //Проверка есть ли такой же Plugin в Lock
-            if let Some(e) = lock.plugins().get(name) {
-                match e.version() {
-                    Some(e) => {
-                        if *e == build && !plugin.force_update() || plugin.freeze() {
-                            info!("Плагин {} не нуждается в обновлении", name);
-                            return Ok(());
-                        }
+    pub async fn download_all(
+        &self,
+        game_version: &str,
+        lock: &Arc<Mutex<Lock>>,
+        mpb: &Arc<Mutex<MultiProgress>>,
+    ) -> Result<()> {
+        //make list of links
+        let mut link_list = Vec::new();
+        let mut handler_list = Vec::new();
+        for (name, plugin) in self.0.clone() {
+            let (link, hash, build) = plugin.get_link(&name, game_version).await?;
+            if let Some(plugin_meta) = lock.lock().await.plugins().get(&name) {
+                if let Some(local_build) = plugin_meta.version() {
+                    if *local_build == build && !plugin.force_update() || plugin.freeze() {
+                        // PB style, init
+                        let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
+                            f.write_str(&name).unwrap();
+                        };
+                        let pb = mpb.lock().await.add(ProgressBar::new_spinner());
+                        pb.set_style(
+                            ProgressStyle::with_template("Package:: {name:.blue} >>> {msg:.blue}")
+                                .unwrap()
+                                .with_key("name", name_closure),
+                        );
+                        pb.finish_with_message("Does't need to update");
+                        continue;
                     }
-                    None => {}
                 }
             }
-            // Получение файла
-            let file = plugin.get_file(name.to_string(), link, hash).await?;
-            // Сохранение
-            plugin.save_bytes(file, name).await?;
-            // Добавление в Lock
-            lock.plugins_mut().insert(name.to_string(), {
-                ExtensionMeta::new(Some(build), format!("./plugins/{}.jar", name))
-            });
-            // Используем на каждой итерации, так как может возникнуть ошибка.
-            lock.save().await?;
+            link_list.push((link, hash, build, name.to_owned()))
         }
+        for (link, hash, build, name) in link_list {
+            let lock = Arc::clone(lock);
+            let mpb = Arc::clone(mpb);
+            handler_list.push(tokio::spawn(async move {
+                let mpb = mpb.lock().await;
+                let file = Plugin::get_file(name.to_owned(), link, hash, &mpb).await?;
+                let mut lock = lock.lock().await;
+                Plugin::save_bytes(file, name.as_str()).await?;
+                lock.plugins_mut().insert(name.to_string(), {
+                    ExtensionMeta::new(Some(build), format!("./plugins/{}.jar", name))
+                });
+                lock.save().await
+            }));
+        }
+        join_all(handler_list).await;
         Ok(())
     }
 }

@@ -5,7 +5,7 @@ use crate::models::extensions::modrinth::ModrinthData;
 use crate::tr::hash::ChooseHash;
 use crate::tr::model::extension::ModelExtensions;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Default)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Default, Clone)]
 pub struct Plugin {
     // Откуда качаем
     #[serde(default)]
@@ -59,7 +59,7 @@ impl Plugin {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum Sources {
     Spigot, // bad api
@@ -69,7 +69,7 @@ pub enum Sources {
     CurseForge, // ?
 }
 
-#[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum Channels {
     #[default]

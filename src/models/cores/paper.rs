@@ -1,3 +1,4 @@
+use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -48,15 +49,35 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
     //find build and push link
     async fn get_link(core: &Core) -> Result<(String, ChooseHash, String)> {
         let core_name = Self::CORE_NAME;
+        // make pb
+        let pb = ProgressBar::new_spinner();
+        let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
+            f.write_str(core_name).unwrap();
+        };
+        pb.set_style(
+            ProgressStyle::with_template(
+                "Package:: {name:.blue} >>> {spinner:.green} {msg:.blue} ",
+            )
+            .unwrap()
+            .with_key("name", name_closure),
+        );
+        // Start work
+        pb.set_message("Init work");
         //get data from core
         let build = core.build();
         let version = core.version();
         //find link and version
+
+        pb.set_message("Finding version");
+
         let version = find_version(version, core_name).await?;
         let verlink = format!(
             "https://api.papermc.io/v2/projects/{}/versions/{}",
             core_name, version
         );
+
+        pb.set_message("Make link");
+
         let build_list: BuildList = reqwest::get(verlink).await?.json().await?;
         let build_list = build_list.builds.as_slice();
         match build {

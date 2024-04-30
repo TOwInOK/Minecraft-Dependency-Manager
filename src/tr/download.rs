@@ -1,15 +1,15 @@
 use crate::errors::error::Result;
 use bytes::{Bytes, BytesMut};
 use futures_util::StreamExt;
-use indicatif::{ProgressBar, ProgressState, ProgressStyle};
+use indicatif::{MultiProgress, ProgressBar, ProgressState, ProgressStyle};
 
 use super::hash::ChooseHash;
 pub trait Download {
     fn get_file(
-        &self,
         name: String,
         link: String,
         hash: ChooseHash,
+        mpb: &MultiProgress,
     ) -> impl std::future::Future<Output = Result<Bytes>> + Send {
         async move {
             // make reqwest
@@ -21,7 +21,7 @@ pub trait Download {
                 f.write_str(&name).unwrap();
             };
             // PB style, init
-            let pb = ProgressBar::new(size);
+            let pb = mpb.add(ProgressBar::new(size));
             pb.set_style(
                 ProgressStyle::with_template(
                     "Package:: {name:.blue} >>> {spinner:.green} {msg:.blue} | {bytes:.blue}/{total_bytes:.blue} -> eta:{eta:.blue}, {bytes_per_sec:.blue} | ",
@@ -29,7 +29,6 @@ pub trait Download {
                 .unwrap()
                 .with_key("name", name_closure),
             );
-
             pb.set_message("Download...");
 
             let mut size_upload = 0_u64;
