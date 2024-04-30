@@ -103,7 +103,7 @@ impl Core {
         }
         let mpb = mpb.lock().await;
         let file = Core::get_file(self.provider.as_str().to_string(), link, hash, &mpb).await?;
-        Plugin::save_bytes(file, self.provider().as_str()).await?;
+        Core::save_bytes(file, self.provider().as_str()).await?;
         *lock.core_mut() = CoreMeta::new(self.provider.clone(), self.version.clone(), Some(build));
         lock.save().await
     }
