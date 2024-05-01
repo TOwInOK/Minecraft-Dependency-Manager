@@ -2,16 +2,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
 pub struct ExtensionMeta {
-    version: Option<String>,
+    build: String,
     path: String,
 }
 impl ExtensionMeta {
-    pub fn new(version: Option<String>, path: String) -> Self {
-        Self { version, path }
+    pub fn new(build: String, path: String) -> Self {
+        Self { build, path }
     }
 
-    pub fn version(&self) -> Option<&String> {
-        self.version.as_ref()
+    pub fn build(&self) -> &str {
+        self.build.as_ref()
     }
 
     pub fn path(&self) -> &str {

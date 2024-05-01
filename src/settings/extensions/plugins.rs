@@ -37,21 +37,20 @@ impl Plugins {
         for (name, plugin) in self.0.clone() {
             let (link, hash, build) = plugin.get_link(&name, game_version).await?;
             if let Some(plugin_meta) = lock.lock().await.plugins().get(&name) {
-                if let Some(local_build) = plugin_meta.version() {
-                    if *local_build == build && !plugin.force_update() || plugin.freeze() {
-                        // PB style, init
-                        let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
-                            f.write_str(&name).unwrap();
-                        };
-                        let pb = mpb.lock().await.add(ProgressBar::new_spinner());
-                        pb.set_style(
-                            ProgressStyle::with_template("Package:: {name:.blue} >>> {msg:.blue}")
-                                .unwrap()
-                                .with_key("name", name_closure),
-                        );
-                        pb.finish_with_message("Does't need to update");
-                        continue;
-                    }
+                let local_build = plugin_meta.build();
+                if *local_build == build && !plugin.force_update() || plugin.freeze() {
+                    // PB style, init
+                    let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
+                        f.write_str(&name).unwrap();
+                    };
+                    let pb = mpb.lock().await.add(ProgressBar::new_spinner());
+                    pb.set_style(
+                        ProgressStyle::with_template("Package:: {name:.blue} >>> {msg:.blue}")
+                            .unwrap()
+                            .with_key("name", name_closure),
+                    );
+                    pb.finish_with_message("Does't need to update");
+                    continue;
                 }
             }
             link_list.push((link, hash, build, name.to_owned()))
@@ -65,7 +64,7 @@ impl Plugins {
                 let mut lock = lock.lock().await;
                 Plugin::save_bytes(file, name.as_str()).await?;
                 lock.plugins_mut().insert(name.to_string(), {
-                    ExtensionMeta::new(Some(build), format!("./plugins/{}.jar", name))
+                    ExtensionMeta::new(build, format!("./plugins/{}.jar", name))
                 });
                 lock.save().await
             }));
