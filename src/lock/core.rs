@@ -39,14 +39,3 @@ impl CoreMeta {
         self.path.as_ref()
     }
 }
-
-impl From<Core> for CoreMeta {
-    fn from(value: Core) -> Self {
-        Self {
-            provider: value.provider().clone(),
-            version: value.version().to_owned(),
-            build: value.build().cloned(),
-            path: format!("./{}.jar", value.provider().as_str()),
-        }
-    }
-}

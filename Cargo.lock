@@ -582,6 +582,7 @@ name = "minecraft_addon_controller"
 version = "0.1.0"
 dependencies = [
  "bytes",
+ "console",
  "futures-util",
  "indicatif",
  "log",

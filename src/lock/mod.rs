@@ -32,8 +32,8 @@ impl Lock {
     pub fn plugins_mut(&mut self) -> &mut ExtensionMetaList {
         &mut self.plugins
     }
-    pub fn set_core(&mut self, value: Core) {
-        self.core = value.into();
+    pub fn set_core(&mut self, value: Core, build: String) {
+        self.core = value.to_meta(build);
     }
     pub fn remove_plugin(&mut self, key: &str) -> Result<()> {
         self.plugins.remove(key)

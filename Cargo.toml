@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 bytes = "1.6.0"
+console = "0.15.8"
 futures-util = "0.3.30"
 indicatif = { version = "0.17.8", features = ["tokio"] }
 log = "0.4.21"

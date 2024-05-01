@@ -4,6 +4,7 @@ use crate::{
     settings::core::Core,
     tr::{hash::ChooseHash, model::core::ModelCore},
 };
+use indicatif::{MultiProgress, ProgressBar};
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -68,7 +69,7 @@ impl ModelCore for Vanilla {
     type Link = OuterLink;
     type Version = VersionID;
     /// Making request to mojang api and find the link to download minecraft.jar
-    async fn get_link(core: &Core) -> Result<(OuterLink, ChooseHash, VersionID)> {
+    async fn get_link(core: &Core, pb: &ProgressBar) -> Result<(OuterLink, ChooseHash, VersionID)> {
         let version = core.version();
         // debug!("Start find fn with version: {:#?}", version);
         let link = find_version(version).await?;

@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
         .init();
     let mpb = Arc::new(Mutex::new(MultiProgress::new()));
     let pb = mpb.lock().await.add(ProgressBar::new_spinner());
-    pb.set_message("Init Minecraft Addon Controller");
+    pb.finish_with_message("Init Minecraft Addon Controller");
     let lock = Arc::new(Mutex::new(Lock::load().await.unwrap_or_default()));
     let settings = Settings::load().await?;
     // let a = Additions::new(Some("GitHub.link".to_string()), Some("GitHub.key".to_string()));

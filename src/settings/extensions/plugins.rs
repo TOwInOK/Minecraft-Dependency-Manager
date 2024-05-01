@@ -33,48 +33,63 @@ impl Plugins {
         lock: &Arc<Mutex<Lock>>,
         mpb: &Arc<Mutex<MultiProgress>>,
     ) -> Result<()> {
-        //make list of links
         let mut link_list = Vec::new();
-        let mut handler_list = Vec::new();
+        let mut handler_list: Vec<
+            tokio::task::JoinHandle<std::prelude::v1::Result<(), crate::errors::error::Error>>,
+        > = Vec::new();
+        // Make link_list
+        // Check plugins in List
         for (name, plugin) in self.0.clone() {
+            // Get link
             let (link, hash, build) = plugin.get_link(&name, game_version).await?;
+
+            // Init name for PB
+            let cloned_name = name.clone();
+            let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
+                f.write_str(&cloned_name.clone()).unwrap();
+            };
+            // PB init
+            let pb = mpb.lock().await.add(ProgressBar::new_spinner());
+            // PB style
+            pb.set_style(
+                ProgressStyle::with_template("Package:: {name:.blue} >>> {msg:.blue}")
+                    .unwrap()
+                    .with_key("name", name_closure),
+            );
+            // Check meta
             if let Some(plugin_meta) = lock.lock().await.plugins().get(&name) {
                 let local_build = plugin_meta.build();
+                // Need to download?
                 if *local_build == build && !plugin.force_update() || plugin.freeze() {
-                    // PB style, init
-                    let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
-                        f.write_str(&name).unwrap();
-                    };
-                    let pb = mpb.lock().await.add(ProgressBar::new_spinner());
-                    pb.set_style(
-                        ProgressStyle::with_template("Package:: {name:.blue} >>> {msg:.blue}")
-                            .unwrap()
-                            .with_key("name", name_closure),
-                    );
                     pb.finish_with_message("Does't need to update");
                     continue;
                 }
             }
-            link_list.push((link, hash, build, name.to_owned()))
+            link_list.push((link, hash, build, name.to_owned(), pb))
         }
-        for (link, hash, build, name) in link_list {
+        // Make handler_list
+        for (link, hash, build, name, pb) in link_list {
             let lock = Arc::clone(lock);
-            let mpb = Arc::clone(mpb);
+
             handler_list.push(tokio::spawn(async move {
-                // lock bar & lock
+                // get lock
                 let mut lock = lock.lock().await;
-                let mpb = mpb.lock().await;
                 // get file
-                let file = Plugin::get_file(name.to_owned(), link, hash, &mpb).await?;
+                let file = Plugin::get_file(name.to_owned(), link, hash, &pb).await?;
+                pb.set_message("Remove exist version");
                 //delete prevision item
                 lock.remove_plugin(&name)?;
+                pb.set_message("Saving...");
                 // save on disk
                 Plugin::save_bytes(file, name.as_str()).await?;
+                pb.set_message("Logging...");
                 //save in lock
                 lock.plugins_mut().insert(name.to_string(), {
                     ExtensionMeta::new(build, format!("{}{}.jar", PATH, name))
                 });
-                lock.save().await
+                let res = lock.save().await?;
+                pb.finish_with_message("Done");
+                Ok(res)
             }));
         }
         join_all(handler_list).await;

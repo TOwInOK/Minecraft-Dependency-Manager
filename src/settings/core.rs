@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
-use indicatif::MultiProgress;
+use console::Term;
+use indicatif::{MultiProgress, ProgressBar, ProgressState, ProgressStyle};
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
 use crate::errors::error::Result;
+use crate::lock::core::CoreMeta;
 use crate::lock::Lock;
 use crate::models::cores::folia::Folia;
 use crate::models::cores::paper::Paper;
@@ -43,6 +45,11 @@ fn version() -> String {
 }
 
 impl Core {
+    pub fn to_meta(self, build: String) -> CoreMeta {
+        let path = format!("./{}.jar", &self.provider.as_str().to_string());
+        CoreMeta::new(self.provider, self.version, Some(build), path)
+    }
+
     pub fn provider(&self) -> &Provider {
         &self.provider
     }
@@ -88,32 +95,48 @@ impl Core {
         lock: &Arc<Mutex<Lock>>,
         mpb: &Arc<Mutex<MultiProgress>>,
     ) -> Result<()> {
-        let (link, hash, build) = self.get_link().await?;
+        let mpb = mpb.lock().await;
+
+        let name = self.provider.as_str().to_string();
+        // PB style, init
+        let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
+            f.write_str(&name).unwrap();
+        };
+        let pb = mpb.add(ProgressBar::new_spinner());
+        pb.set_style(
+            ProgressStyle::with_template("Package:: {name:.blue} >>> {msg:.blue}")
+                .unwrap()
+                .with_key("name", name_closure),
+        );
+
+        let (link, hash, build) = self.get_link(&pb).await?;
         let mut lock = lock.lock().await;
+
         if let Some(e) = lock.core().build() {
             debug!("lock build: {} / build: {}", &e, &build);
-            if *e == build && !self.force_update || self.freeze {
-                info!("Ядро не нуждается в обновлении");
+            if *e == build && (!self.force_update || self.freeze) {
+                pb.finish_with_message("Does't need to update");
                 return Ok(());
             }
         }
-        let mpb = mpb.lock().await;
-        let file = Core::get_file(self.provider.as_str().to_string(), link, hash, &mpb).await?;
+        pb.set_message("Downloading...");
+        let file = Core::get_file(self.provider.as_str().to_string(), link, hash, &pb).await?;
+        pb.set_message("Start download");
         Core::save_bytes(file, self.provider().as_str()).await?;
-        *lock.core_mut() = self.clone().into();
+        *lock.core_mut() = self.clone().to_meta(build);
         lock.save().await
     }
-    async fn get_link(&self) -> Result<(String, ChooseHash, String)> {
+    async fn get_link(&self, pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
         match self.provider {
-            Provider::Vanilla => Vanilla::get_link(self).await,
-            Provider::Paper => Paper::get_link(self).await,
-            Provider::Folia => Folia::get_link(self).await,
-            Provider::Purpur => Purpur::get_link(self).await,
+            Provider::Vanilla => Vanilla::get_link(self, pb).await,
+            Provider::Paper => Paper::get_link(self, pb).await,
+            Provider::Folia => Folia::get_link(self, pb).await,
+            Provider::Purpur => Purpur::get_link(self, pb).await,
             Provider::Fabric => todo!(),
             Provider::Forge => todo!(),
             Provider::NeoForge => todo!(),
-            Provider::Waterfall => Waterfall::get_link(self).await,
-            Provider::Velocity => Velocity::get_link(self).await,
+            Provider::Waterfall => Waterfall::get_link(self, pb).await,
+            Provider::Velocity => Velocity::get_link(self, pb).await,
         }
     }
 }
