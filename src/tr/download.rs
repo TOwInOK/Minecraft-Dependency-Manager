@@ -6,7 +6,6 @@ use indicatif::ProgressBar;
 use super::hash::ChooseHash;
 pub trait Download {
     fn get_file(
-        name: String,
         link: String,
         hash: ChooseHash,
         pb: &ProgressBar,

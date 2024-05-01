@@ -120,7 +120,7 @@ impl Core {
             }
         }
         pb.set_message("Downloading...");
-        let file = Core::get_file(self.provider.as_str().to_string(), link, hash, &pb).await?;
+        let file = Core::get_file(link, hash, &pb).await?;
         pb.set_message("Start download");
         Core::save_bytes(file, self.provider().as_str()).await?;
         *lock.core_mut() = self.clone().to_meta(build);

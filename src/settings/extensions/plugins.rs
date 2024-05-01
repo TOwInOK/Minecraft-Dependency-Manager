@@ -75,7 +75,7 @@ impl Plugins {
                 // get lock
                 let mut lock = lock.lock().await;
                 // get file
-                let file = Plugin::get_file(name.to_owned(), link, hash, &pb).await?;
+                let file = Plugin::get_file(link, hash, &pb).await?;
                 pb.set_message("Remove exist version");
                 //delete prevision item
                 lock.remove_plugin(&name)?;
