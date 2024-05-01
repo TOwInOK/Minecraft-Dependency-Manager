@@ -26,6 +26,7 @@ async fn main() -> Result<()> {
     let settings = Settings::load().await?;
     // let a = Additions::new(Some("GitHub.link".to_string()), Some("GitHub.key".to_string()));
     // settings.set_additions(Some(a));
+    lock.lock().await.remove_nonexistent(&settings)?;
     if let Some(plugins) = settings.plugins() {
         plugins
             .download_all(settings.core().version(), &lock, &mpb)

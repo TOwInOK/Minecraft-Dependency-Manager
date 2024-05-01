@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
 use crate::errors::error::Result;
-use crate::lock::core::CoreMeta;
 use crate::lock::Lock;
 use crate::models::cores::folia::Folia;
 use crate::models::cores::paper::Paper;

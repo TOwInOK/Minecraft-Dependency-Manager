@@ -13,6 +13,8 @@ use crate::tr::{download::Download, save::Save};
 
 use super::plugin::Plugin;
 
+const PATH: &'static str = "./plugins/";
+
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
 pub struct Plugins(HashMap<String, Plugin>);
 
@@ -59,12 +61,18 @@ impl Plugins {
             let lock = Arc::clone(lock);
             let mpb = Arc::clone(mpb);
             handler_list.push(tokio::spawn(async move {
-                let mpb = mpb.lock().await;
-                let file = Plugin::get_file(name.to_owned(), link, hash, &mpb).await?;
+                // lock bar & lock
                 let mut lock = lock.lock().await;
+                let mpb = mpb.lock().await;
+                // get file
+                let file = Plugin::get_file(name.to_owned(), link, hash, &mpb).await?;
+                //delete prevision item
+                lock.remove_plugin(&name)?;
+                // save on disk
                 Plugin::save_bytes(file, name.as_str()).await?;
+                //save in lock
                 lock.plugins_mut().insert(name.to_string(), {
-                    ExtensionMeta::new(build, format!("./plugins/{}.jar", name))
+                    ExtensionMeta::new(build, format!("{}{}.jar", PATH, name))
                 });
                 lock.save().await
             }));
@@ -76,5 +84,5 @@ impl Plugins {
 
 impl Download for Plugin {}
 impl Save for Plugin {
-    const PATH: &'static str = "./plugins/";
+    const PATH: &'static str = PATH;
 }

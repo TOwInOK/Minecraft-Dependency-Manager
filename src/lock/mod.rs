@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use self::core::CoreMeta;
 use self::ext::ExtensionMeta;
 use crate::errors::error::Result;
+use crate::settings::Settings;
 use crate::{
     settings::core::Core,
     tr::{load::Load, save::Save},
@@ -44,6 +45,19 @@ impl Lock {
     pub fn remove_core(&mut self) -> Result<()> {
         fs::remove_file(self.core().path())?;
         self.core = CoreMeta::default();
+        Ok(())
+    }
+    pub fn remove_nonexistent(&mut self, settings: &Settings) -> Result<()> {
+        let plugin_keys: Vec<String> = self.plugins().0.keys().cloned().collect();
+        // TODO: let mods_keys
+        if let Some(e) = settings.plugins() {
+            for key in plugin_keys {
+                if !e.items().contains_key(&key) {
+                    self.remove_plugin(key.as_str())?;
+                }
+            }
+        }
+        // TODO: add remover for mods
         Ok(())
     }
 }
