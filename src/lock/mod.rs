@@ -11,15 +11,15 @@ use std::collections::HashMap;
 #[derive(Default, Serialize, Deserialize)]
 pub struct Lock {
     core: CoreMeta,
-    plugins: HashMap<String, ExtensionMeta>,
-    mods: HashMap<String, ExtensionMeta>,
+    plugins: ExtensionMetaList,
+    mods: ExtensionMetaList,
 }
 impl Lock {
     pub fn core(&self) -> &CoreMeta {
         &self.core
     }
 
-    pub fn plugins(&self) -> &HashMap<String, ExtensionMeta> {
+    pub fn plugins(&self) -> &ExtensionMetaList {
         &self.plugins
     }
 
@@ -27,8 +27,19 @@ impl Lock {
         &mut self.core
     }
 
-    pub fn plugins_mut(&mut self) -> &mut HashMap<String, ExtensionMeta> {
+    pub fn plugins_mut(&mut self) -> &mut ExtensionMetaList {
         &mut self.plugins
+    }
+}
+
+#[derive(Default, Serialize, Deserialize)]
+pub struct ExtensionMetaList(HashMap<String, ExtensionMeta>);
+impl ExtensionMetaList {
+    pub fn get(&self, key: &str) -> Option<&ExtensionMeta> {
+        self.0.get(key)
+    }
+    pub fn set(&mut self, key: String, value: ExtensionMeta) {
+        self.0.insert(key, value);
     }
 }
 
