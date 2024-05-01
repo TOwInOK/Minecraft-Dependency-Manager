@@ -3,3 +3,8 @@ Cargo.lock
 lock.toml
 /.vscode
 /plugins/*
+paper.jar
+vanilla.jar
+purpur.jar
+folia.jar
+waterfall.jar
