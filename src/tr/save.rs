@@ -14,16 +14,11 @@ pub trait Save {
     {
         async move {
             {
-                let os_path = Path::new(Self::PATH);
-                // Проверить путь на исправность
-                if !os_path.exists() {
-                    return not_found_path!(Self::PATH);
-                }
                 // Сериализуем в понятный человеку томл
                 let toml_content = toml::to_string_pretty(&self)?;
 
                 // Откроем для записи
-                let mut file = File::create(os_path).await?;
+                let mut file = File::create(Self::PATH).await?;
 
                 // Запишем файл
                 file.write_all(toml_content.as_bytes()).await?;

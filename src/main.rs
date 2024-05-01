@@ -19,9 +19,11 @@ async fn main() -> Result<()> {
     pretty_env_logger::formatted_builder()
         .filter_level(log::LevelFilter::Info)
         .init();
+    // Lock::default().save().await?;
     let mpb = Arc::new(Mutex::new(MultiProgress::new()));
     let pb = mpb.lock().await.add(ProgressBar::new_spinner());
     pb.finish_with_message("Init Minecraft Addon Controller");
+
     let lock = Arc::new(Mutex::new(Lock::load().await.unwrap_or_default()));
     let settings = Settings::load().await?;
     // let a = Additions::new(Some("GitHub.link".to_string()), Some("GitHub.key".to_string()));
