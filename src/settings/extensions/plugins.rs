@@ -64,7 +64,7 @@ impl Plugins {
                 let file = Plugin::get_file(name.to_owned(), link, hash, &mpb).await?;
                 let mut lock = lock.lock().await;
                 Plugin::save_bytes(file, name.as_str()).await?;
-                lock.plugins_mut().set(name.to_string(), {
+                lock.plugins_mut().insert(name.to_string(), {
                     ExtensionMeta::new(Some(build), format!("./plugins/{}.jar", name))
                 });
                 lock.save().await

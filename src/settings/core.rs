@@ -18,8 +18,6 @@ use crate::tr::hash::ChooseHash;
 use crate::tr::model::core::ModelCore;
 use crate::tr::{download::Download, save::Save};
 
-use super::extensions::plugin::Plugin;
-
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Core {
@@ -85,7 +83,6 @@ impl Core {
     pub fn set_force_update(&mut self, force_update: bool) {
         self.force_update = force_update;
     }
-
     /// Скачиваем `Core` и сохраняем его по стандартному пути.
     pub async fn download(
         &self,
@@ -104,7 +101,7 @@ impl Core {
         let mpb = mpb.lock().await;
         let file = Core::get_file(self.provider.as_str().to_string(), link, hash, &mpb).await?;
         Core::save_bytes(file, self.provider().as_str()).await?;
-        *lock.core_mut() = CoreMeta::new(self.provider.clone(), self.version.clone(), Some(build));
+        *lock.core_mut() = self.clone().into();
         lock.save().await
     }
     async fn get_link(&self) -> Result<(String, ChooseHash, String)> {

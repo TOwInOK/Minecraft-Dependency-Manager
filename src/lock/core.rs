@@ -10,14 +10,17 @@ pub struct CoreMeta {
     version: String,
     // Версия билда ядра
     build: Option<String>,
+    // Путь до ядра
+    path: String,
 }
 
 impl CoreMeta {
-    pub fn new(provider: Provider, version: String, build: Option<String>) -> Self {
+    pub fn new(provider: Provider, version: String, build: Option<String>, path: String) -> Self {
         Self {
             provider,
             version,
             build,
+            path,
         }
     }
 
@@ -32,6 +35,9 @@ impl CoreMeta {
     pub fn build(&self) -> Option<&String> {
         self.build.as_ref()
     }
+    pub fn path(&self) -> &str {
+        self.path.as_ref()
+    }
 }
 
 impl From<Core> for CoreMeta {
@@ -40,6 +46,7 @@ impl From<Core> for CoreMeta {
             provider: value.provider().clone(),
             version: value.version().to_owned(),
             build: value.build().cloned(),
+            path: format!("./{}.jar", value.provider().as_str()),
         }
     }
 }
