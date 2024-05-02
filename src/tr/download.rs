@@ -1,7 +1,7 @@
 use crate::errors::error::Result;
 use bytes::{Bytes, BytesMut};
 use futures_util::StreamExt;
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressStyle};
 
 use super::hash::ChooseHash;
 pub trait Download {

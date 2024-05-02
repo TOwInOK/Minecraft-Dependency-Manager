@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::settings::core::{Core, Provider};
+use crate::settings::core::Provider;
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 pub struct CoreMeta {

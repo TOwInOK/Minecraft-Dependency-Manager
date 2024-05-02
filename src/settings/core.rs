@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use console::Term;
-use indicatif::{MultiProgress, ProgressBar, ProgressState, ProgressStyle};
-use log::{debug, info};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
@@ -97,17 +96,15 @@ impl Core {
     ) -> Result<()> {
         let mpb = mpb.lock().await;
 
-        let name = self.provider.as_str().to_string();
-        // PB style, init
-        let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
-            f.write_str(&name).unwrap();
-        };
         let pb = mpb.add(ProgressBar::new_spinner());
         pb.set_style(
-            ProgressStyle::with_template("Package:: {name:.blue} >>> {msg:.blue}")
-                .unwrap()
-                .with_key("name", name_closure),
+            ProgressStyle::with_template(
+                "Package:: {prefix:.blue} >>>{spinner:.green} {msg:.blue} > eta: {eta:.blue}",
+            )
+            .unwrap(),
         );
+        pb.set_prefix(self.provider.as_str());
+        // Check meta
 
         let (link, hash, build) = self.get_link(&pb).await?;
         let mut lock = lock.lock().await;
@@ -119,12 +116,13 @@ impl Core {
                 return Ok(());
             }
         }
-        pb.set_message("Downloading...");
         let file = Core::get_file(link, hash, &pb).await?;
-        pb.set_message("Start download");
+        pb.set_message("Saving file");
         Core::save_bytes(file, self.provider().as_str()).await?;
         *lock.core_mut() = self.clone().to_meta(build);
-        lock.save().await
+        let res = lock.save().await;
+        pb.finish_with_message("Done");
+        res
     }
     async fn get_link(&self, pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
         match self.provider {

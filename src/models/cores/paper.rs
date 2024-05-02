@@ -1,4 +1,4 @@
-use indicatif::{MultiProgress, ProgressBar, ProgressState, ProgressStyle};
+use indicatif::ProgressBar;
 use serde::{Deserialize, Serialize};
 
 use crate::{

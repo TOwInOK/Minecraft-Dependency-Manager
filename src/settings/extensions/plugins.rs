@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use futures_util::future::join_all;
-use indicatif::{MultiProgress, ProgressBar, ProgressState, ProgressStyle};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
@@ -13,7 +13,7 @@ use crate::tr::{download::Download, save::Save};
 
 use super::plugin::Plugin;
 
-const PATH: &'static str = "./plugins/";
+const PATH: &str = "./plugins/";
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
 pub struct Plugins(HashMap<String, Plugin>);
@@ -42,20 +42,16 @@ impl Plugins {
         for (name, plugin) in self.0.clone() {
             // Get link
             let (link, hash, build) = plugin.get_link(&name, game_version).await?;
-
-            // Init name for PB
-            let cloned_name = name.clone();
-            let name_closure = move |_: &ProgressState, f: &mut dyn std::fmt::Write| {
-                f.write_str(&cloned_name.clone()).unwrap();
-            };
             // PB init
             let pb = mpb.lock().await.add(ProgressBar::new_spinner());
             // PB style
             pb.set_style(
-                ProgressStyle::with_template("Package:: {name:.blue} >>> {msg:.blue}")
-                    .unwrap()
-                    .with_key("name", name_closure),
+                ProgressStyle::with_template(
+                    "Package:: {prefix:.blue} >>>{spinner:.green} {msg:.blue} > eta: {eta:.blue}",
+                )
+                .unwrap(),
             );
+            pb.set_prefix(name.clone());
             // Check meta
             if let Some(plugin_meta) = lock.lock().await.plugins().get(&name) {
                 let local_build = plugin_meta.build();
@@ -87,9 +83,9 @@ impl Plugins {
                 lock.plugins_mut().insert(name.to_string(), {
                     ExtensionMeta::new(build, format!("{}{}.jar", PATH, name))
                 });
-                let res = lock.save().await?;
+                lock.save().await?;
                 pb.finish_with_message("Done");
-                Ok(res)
+                Ok(())
             }));
         }
         join_all(handler_list).await;

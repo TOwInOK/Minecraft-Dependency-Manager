@@ -1,4 +1,4 @@
-use indicatif::{MultiProgress, ProgressBar};
+use indicatif::ProgressBar;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -43,7 +43,7 @@ impl ModelCore for Purpur {
     type Version = String;
 
     //find build and push link
-    async fn get_link(core: &Core, pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
+    async fn get_link(core: &Core, _pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
         let build = core.build();
         let version = core.version();
         let version = find_version(version).await?;
