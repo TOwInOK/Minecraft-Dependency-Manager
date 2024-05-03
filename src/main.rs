@@ -41,20 +41,24 @@ async fn download(
     lock: Arc<Mutex<Lock>>,
     mpb: Arc<MultiProgress>,
 ) -> Result<()> {
-    '_download_plugins: {
+    '_core_scope: {
+        let lock = Arc::clone(&lock);
+        let mpb = Arc::clone(&mpb);
+        settings.core().download(lock, mpb).await?;
+    }
+    '_plugins_scope: {
+        let lock = Arc::clone(&lock);
+        let mpb = Arc::clone(&mpb);
         if let Some(plugins) = settings.plugins() {
             plugins
                 .download_all(
-                    &settings.core().provider().as_str(),
-                    &settings.core().version(),
-                    &lock,
-                    &mpb,
+                    settings.core().provider().as_str(),
+                    settings.core().version(),
+                    lock,
+                    mpb,
                 )
                 .await?;
         }
-    }
-    '_download_core: {
-        settings.core().download(&lock, &mpb).await?;
     }
     Ok(())
 }

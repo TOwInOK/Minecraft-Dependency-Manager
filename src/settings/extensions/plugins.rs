@@ -32,8 +32,8 @@ impl Plugins {
         &self,
         loader: &str,
         game_version: &str,
-        lock: &Arc<Mutex<Lock>>,
-        mpb: &Arc<MultiProgress>,
+        lock: Arc<Mutex<Lock>>,
+        mpb: Arc<MultiProgress>,
     ) -> Result<()> {
         let mut link_list = Vec::new();
         let mut handler_list: Vec<JoinHandle<Result<()>>> = Vec::new();
@@ -65,7 +65,7 @@ impl Plugins {
         }
         // Make handler_list
         for (link, hash, build, name, pb) in link_list {
-            let lock = Arc::clone(lock);
+            let lock = Arc::clone(&lock);
 
             handler_list.push(tokio::spawn(async move {
                 // get lock

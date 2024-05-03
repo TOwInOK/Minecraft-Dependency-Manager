@@ -1,7 +1,6 @@
 [core]
 provider = "paper"
 version = "1.20.6"
-force_update = true
 
 [plugins.simple-voice-chat]
 [plugins.chunky]

@@ -88,7 +88,7 @@ impl Core {
         self.force_update = force_update;
     }
     /// Скачиваем `Core` и сохраняем его по стандартному пути.
-    pub async fn download(&self, lock: &Arc<Mutex<Lock>>, mpb: &Arc<MultiProgress>) -> Result<()> {
+    pub async fn download(&self, lock: Arc<Mutex<Lock>>, mpb: Arc<MultiProgress>) -> Result<()> {
         let pb = mpb.add(ProgressBar::new_spinner());
         pb.set_style(
             ProgressStyle::with_template(
