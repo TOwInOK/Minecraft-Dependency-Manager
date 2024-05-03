@@ -13,7 +13,7 @@ use crate::{
 };
 use std::{collections::HashMap, fs};
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Lock {
     core: CoreMeta,
     plugins: ExtensionMetaList,
@@ -62,7 +62,7 @@ impl Lock {
     }
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct ExtensionMetaList(HashMap<String, ExtensionMeta>);
 impl ExtensionMetaList {
     pub fn get(&self, key: &str) -> Option<&ExtensionMeta> {

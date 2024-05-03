@@ -5,6 +5,7 @@ use futures_util::future::join_all;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
+use tokio::task::JoinHandle;
 
 use crate::errors::error::Result;
 use crate::lock::ext::ExtensionMeta;
@@ -29,21 +30,20 @@ impl Plugins {
 
     pub async fn download_all(
         &self,
+        loader: &str,
         game_version: &str,
         lock: &Arc<Mutex<Lock>>,
-        mpb: &Arc<Mutex<MultiProgress>>,
+        mpb: &Arc<MultiProgress>,
     ) -> Result<()> {
         let mut link_list = Vec::new();
-        let mut handler_list: Vec<
-            tokio::task::JoinHandle<std::prelude::v1::Result<(), crate::errors::error::Error>>,
-        > = Vec::new();
+        let mut handler_list: Vec<JoinHandle<Result<()>>> = Vec::new();
         // Make link_list
         // Check plugins in List
         for (name, plugin) in self.0.clone() {
             // Get link
-            let (link, hash, build) = plugin.get_link(&name, game_version).await?;
+            let (link, hash, build) = plugin.get_link(&name, game_version, loader).await?;
             // PB init
-            let pb = mpb.lock().await.add(ProgressBar::new_spinner());
+            let pb = mpb.add(ProgressBar::new_spinner());
             // PB style
             pb.set_style(
                 ProgressStyle::with_template(

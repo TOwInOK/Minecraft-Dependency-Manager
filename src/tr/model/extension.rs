@@ -9,5 +9,6 @@ pub trait ModelExtensions {
         ext: &Self::Ext,
         name: &str,
         game_version: &str,
+        loader: &str,
     ) -> impl std::future::Future<Output = Result<(Self::Link, ChooseHash, Self::Version)>> + Send;
 }

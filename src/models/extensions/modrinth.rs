@@ -1,3 +1,4 @@
+use log::debug;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -47,19 +48,21 @@ impl ModelExtensions for ModrinthData {
         ext: &Self::Ext,
         name: &str,
         game_version: &str,
+        loader: &str,
     ) -> Result<(Self::Link, ChooseHash, Self::Version)> {
-        let loader = "fabric";
         let link: String = {
             // TODO: Make normal params!
             match game_version {
                 "Latest" => {
                     let channel = ext.channel().get_str().await;
                     let link = format!("https://api.modrinth.com/v2/project/{}/version?&loaders=[\"{}\"]&featured=true&version_type={}", name, loader, channel);
+                    debug!("Plugin: {} -> Link: {}", name, link);
                     link
                 }
                 _ => {
                     let channel = ext.channel().get_str().await;
                     let link = format!("https://api.modrinth.com/v2/project/{}/version?game_versions=[\"{}\"]&loaders=[\"{}\"]&featured=true&version_type={}", name, game_version, loader, channel);
+                    debug!("Plugin: {} -> Link: {}", name, link);
                     link
                 }
             }

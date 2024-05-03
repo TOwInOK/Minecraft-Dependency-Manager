@@ -10,6 +10,7 @@ use std::sync::Arc;
 use crate::errors::error::Result;
 use indicatif::{MultiProgress, ProgressBar};
 use lock::Lock;
+use log::warn;
 use settings::Settings;
 use tokio::sync::Mutex;
 use tr::load::Load;
@@ -19,21 +20,51 @@ async fn main() -> Result<()> {
     pretty_env_logger::formatted_builder()
         .filter_level(log::LevelFilter::Info)
         .init();
-    // Lock::default().save().await?;
-    let mpb = Arc::new(Mutex::new(MultiProgress::new()));
-    let pb = mpb.lock().await.add(ProgressBar::new_spinner());
+    // Init
+    let (mpb, lock, settings) = init().await;
+    //
+    let pb = mpb.add(ProgressBar::new_spinner());
     pb.finish_with_message("Init Minecraft Addon Controller");
-
-    let lock = Arc::new(Mutex::new(Lock::load().await.unwrap_or_default()));
-    let settings = Settings::load().await?;
-    // let a = Additions::new(Some("GitHub.link".to_string()), Some("GitHub.key".to_string()));
-    // settings.set_additions(Some(a));
+    //
     lock.lock().await.remove_nonexistent(&settings)?;
-    if let Some(plugins) = settings.plugins() {
-        plugins
-            .download_all(settings.core().version(), &lock, &mpb)
-            .await?;
+    '_c: {
+        let lock = Arc::clone(&lock);
+        let settings = Arc::clone(&settings);
+        let mpb = Arc::clone(&mpb);
+        download(settings, lock, mpb).await?;
     }
-    settings.core().download(&lock, &mpb).await?;
     Ok(())
+}
+
+async fn download(
+    settings: Arc<Settings>,
+    lock: Arc<Mutex<Lock>>,
+    mpb: Arc<MultiProgress>,
+) -> Result<()> {
+    '_download_plugins: {
+        if let Some(plugins) = settings.plugins() {
+            plugins
+                .download_all(
+                    &settings.core().provider().as_str(),
+                    &settings.core().version(),
+                    &lock,
+                    &mpb,
+                )
+                .await?;
+        }
+    }
+    '_download_core: {
+        settings.core().download(&lock, &mpb).await?;
+    }
+    Ok(())
+}
+
+async fn init() -> (Arc<MultiProgress>, Arc<Mutex<Lock>>, Arc<Settings>) {
+    let mpb: Arc<MultiProgress> = Arc::new(MultiProgress::new());
+    let lock: Arc<Mutex<Lock>> = Arc::new(Mutex::new(Lock::load().await.unwrap_or({
+        warn!("Use default Lock");
+        Lock::default()
+    })));
+    let settings: Arc<Settings> = Arc::new(Settings::load().await.unwrap());
+    (mpb, lock, settings)
 }

@@ -49,11 +49,12 @@ impl Plugin {
         &'a self,
         name: &'a str,
         game_version: &'a str,
+        loader: &'a str,
     ) -> Result<(String, ChooseHash, String)> {
         match self.source {
             Sources::Spigot => todo!(),
             Sources::Hangar => todo!(),
-            Sources::Modrinth => ModrinthData::get_link(self, name, game_version).await,
+            Sources::Modrinth => ModrinthData::get_link(self, name, game_version, loader).await,
             Sources::CurseForge => todo!(),
         }
     }
