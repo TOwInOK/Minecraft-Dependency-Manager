@@ -19,7 +19,6 @@ use crate::tr::model::core::ModelCore;
 use crate::tr::{download::Download, save::Save};
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct Core {
     // Ядро
     #[serde(default)]

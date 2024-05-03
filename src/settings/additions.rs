@@ -4,17 +4,14 @@ use serde::{Deserialize, Serialize};
 pub struct Additions {
     // git link
     #[serde(default)]
-    config_plugins_from: Option<String>,
+    source: Option<String>,
     // git key
     #[serde(default)]
     key: Option<String>,
 }
 
 impl Additions {
-    pub fn new(config_plugins_from: Option<String>, key: Option<String>) -> Self {
-        Self {
-            config_plugins_from,
-            key,
-        }
+    pub fn new(source: Option<String>, key: Option<String>) -> Self {
+        Self { source, key }
     }
 }

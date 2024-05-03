@@ -52,10 +52,8 @@ impl Plugin {
         loader: &'a str,
     ) -> Result<(String, ChooseHash, String)> {
         match self.source {
-            Sources::Spigot => todo!(),
             Sources::Hangar => todo!(),
             Sources::Modrinth => ModrinthData::get_link(self, name, game_version, loader).await,
-            Sources::CurseForge => todo!(),
         }
     }
 }
@@ -63,11 +61,11 @@ impl Plugin {
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum Sources {
-    Spigot, // bad api
+    // Spigot, // bad api // deprecated
     Hangar, // ?
     #[default]
     Modrinth, // Favorite
-    CurseForge, // ?
+            // CurseForge, // ? deprecated
 }
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
