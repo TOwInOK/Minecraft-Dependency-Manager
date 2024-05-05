@@ -2,6 +2,8 @@
 
 # RU
 
+### Проект переписывается, смотреть в ветку Rewriting!
+
 # Что надо
   1. Загрузка из одного файла
   2. Декларативно
@@ -23,6 +25,8 @@
   Так как датапаки - это специфичный инструмент, который лучше устанавливать в ручную.
 
 # EN
+
+### The project is being rewritten, look in the branch
 
 # What is needed
   1. Loading from a single file
