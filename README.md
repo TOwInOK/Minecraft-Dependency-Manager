@@ -1,6 +1,6 @@
 # Minecraft Dependency Controller (MDC)
 
-[RU](<README#Что надо>)[EN](<README#What you need>)
+[RU](#Что_надо) ||| [EN](#What_you_need)
 
 # Что надо
 
