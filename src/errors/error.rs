@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::mananger::messages::Messages;
+
 #[derive(Error, Debug)]
 pub enum CompareHashError {
     #[error("Хэш не совпадает")]
@@ -24,16 +26,45 @@ pub enum Error {
     // Download(String),
     #[error("Ошибка ввода/вывода: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Ошибка парсинга TOML: {0}")]
-    TomlParse(#[from] toml::de::Error),
+    #[error("{0}")]
+    TomlParse(String),
     #[error("Ошибка сериализация TOML: {0}")]
     TomlSerialize(#[from] toml::ser::Error),
     #[error("Не удалось найти: {0}")]
     NotFound(String),
-    // #[error("Ошибка: {0}")]
-    // Any(#[from] Box<dyn std::error::Error>),
+    #[error("Ошибка: {0}")]
+    Any(#[from] Box<dyn std::error::Error + Send>),
+    #[error("Task join error: {0}")]
+    JoinError(#[from] tokio::task::JoinError),
+    #[error("Indicatif template error: {0}")]
+    IndicatifTemplate(#[from] indicatif::style::TemplateError),
+    #[error("Indicatif template error: {0}")]
+    SendMessage(#[from] tokio::sync::mpsc::error::SendError<Messages>),
 }
 pub type Result<T> = std::result::Result<T, Error>;
+
+impl From<toml::de::Error> for Error {
+    fn from(value: toml::de::Error) -> Self {
+        let value = value.to_string();
+        let parts: Vec<&str> = value.split('|').collect();
+
+        // Проверяем, что индексы существуют и выбираем только нужные
+        let message = if parts.len() >= 4 {
+            let third_part = parts[3].trim();
+            let trimmed_third_part = &third_part[2..]; // Удаляем первые три символа
+            format!(
+                "   Where => {} ||| What => {} ||| why => {}   ",
+                parts[0].trim(),
+                parts[2].trim(),
+                trimmed_third_part
+            )
+        } else {
+            value.to_string() // Если не удалось разделить на нужное количество частей, вернем исходную строку
+        };
+
+        Error::TomlParse(message)
+    }
+}
 
 #[macro_export]
 macro_rules! not_found {

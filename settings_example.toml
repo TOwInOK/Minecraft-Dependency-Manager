@@ -1,4 +1,4 @@
-# Require 
+# Require
 [core] # just core, nothing here to change :)
 provider = "paper" # [vanilla, paper, folia, purpur, fabric, waterfall, velocity]
 version = "1.20.6" # Or Latest (latest -> get error)
@@ -24,3 +24,4 @@ force_update = false # false || true => false by default
 [additions]
 source = "git@github.com:Username/Super-Config.git" # Optional, require for key
 key = "MySuperMegaKey" # Optional, don't work without link
+duraction = 300 # Optional, value of duraction between manager checker iterations (in seconds)

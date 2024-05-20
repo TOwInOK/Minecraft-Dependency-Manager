@@ -2,6 +2,7 @@ pub mod core;
 pub mod ext;
 
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLockReadGuard;
 
 use self::core::CoreMeta;
 use self::ext::ExtensionMeta;
@@ -47,7 +48,7 @@ impl Lock {
         self.core = CoreMeta::default();
         Ok(())
     }
-    pub fn remove_nonexistent(&mut self, settings: &Settings) -> Result<()> {
+    pub fn remove_nonexistent(&mut self, settings: RwLockReadGuard<Settings>) -> Result<()> {
         let plugin_keys: Vec<String> = self.plugins().0.keys().cloned().collect();
         // TODO: let mods_keys
         if let Some(e) = settings.plugins() {

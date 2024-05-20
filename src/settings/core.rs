@@ -1,9 +1,11 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
+use tokio::time::sleep;
 
 use crate::errors::error::Result;
 use crate::lock::core::CoreMeta;
@@ -90,32 +92,32 @@ impl Core {
     /// Скачиваем `Core` и сохраняем его по стандартному пути.
     pub async fn download(&self, lock: Arc<Mutex<Lock>>, mpb: Arc<MultiProgress>) -> Result<()> {
         let pb = mpb.add(ProgressBar::new_spinner());
-        pb.set_style(
-            ProgressStyle::with_template(
-                "Package:: {prefix:.blue} >>>{spinner:.green} {msg:.blue} > eta: {eta:.blue}",
-            )
-            .unwrap(),
-        );
+        pb.set_style(ProgressStyle::with_template(
+            "Package:: {prefix:.blue} >>>{spinner:.green} {msg:.blue} > eta: {eta:.blue}",
+        )?);
         pb.set_prefix(self.provider.as_str());
         // Check meta
 
         let (link, hash, build) = self.get_link(&pb).await?;
-        let mut lock = lock.lock().await;
 
-        if let Some(e) = lock.core().build() {
+        if let Some(e) = lock.lock().await.core().build() {
             debug!("lock build: {} / build: {}", &e, &build);
             if *e == build && (!self.force_update || self.freeze) {
-                pb.finish_with_message("Does't need to update");
+                pb.set_message("Does't need to update");
+                sleep(Duration::from_secs(1)).await;
+                pb.finish_and_clear();
                 return Ok(());
             }
         }
         let file = Core::get_file(link, hash, &pb).await?;
         pb.set_message("Saving file");
         Core::save_bytes(file, self.provider().as_str()).await?;
-        *lock.core_mut() = self.clone().to_meta(build);
-        let res = lock.save().await;
-        pb.finish_with_message("Done");
-        res
+        *lock.lock().await.core_mut() = self.clone().to_meta(build);
+        lock.lock().await.save().await?;
+        pb.set_message("Done");
+        sleep(Duration::from_secs(1)).await;
+        pb.finish_and_clear();
+        Ok(())
     }
     async fn get_link(&self, pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
         match self.provider {

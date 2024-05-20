@@ -6,4 +6,3 @@ version = "1.20.6"
 [plugins.chunky]
 [plugins.nbtapi]
 [plugins.chunkyborder]
-[plugins.lifestealz]
