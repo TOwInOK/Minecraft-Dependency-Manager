@@ -1,12 +1,9 @@
 use crate::errors::error::CompareHashError;
 use crate::errors::error::{Error, Result};
-use md5::Md5;
-use serde::Deserialize;
-use serde::Serialize;
-use sha1::Digest as Digest1;
-use sha1::Sha1;
-use sha2::Digest as Digest256;
-use sha2::Sha256;
+use md5::{Digest as Digest5, Md5};
+use serde::{Deserialize, Serialize};
+use sha1::{Digest as Digest1, Sha1};
+use sha2::{Digest as Digest256, Sha256};
 use tokio::io::AsyncReadExt;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Serialize, Deserialize)]
@@ -25,7 +22,7 @@ impl ChooseHash {
         match self {
             ChooseHash::SHA1(e) => {
                 let mut hashed = <Sha1 as Digest1>::new();
-                let mut buffer = [0; 4096];
+                let mut buffer = Vec::<u8>::new();
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;
@@ -41,7 +38,7 @@ impl ChooseHash {
             }
             ChooseHash::SHA256(e) => {
                 let mut hashed = <Sha256 as Digest256>::new();
-                let mut buffer = [0; 4096];
+                let mut buffer = Vec::<u8>::new();
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;
@@ -56,8 +53,8 @@ impl ChooseHash {
                 }
             }
             ChooseHash::MD5(e) => {
-                let mut hashed = <Md5 as md5::Digest>::new();
-                let mut buffer = [0; 4096];
+                let mut hashed = <Md5 as Digest5>::new();
+                let mut buffer = Vec::<u8>::new();
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;

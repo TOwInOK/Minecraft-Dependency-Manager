@@ -8,6 +8,7 @@ use tokio::io::AsyncWriteExt;
 /// Сохраняем структуру на диск
 pub trait Save {
     const PATH: &'static str;
+    // Save data into file.
     fn save(&self) -> impl std::future::Future<Output = Result<()>> + Send
     where
         Self: serde::ser::Serialize + Sync,
@@ -27,6 +28,7 @@ pub trait Save {
             }
         }
     }
+    // Create file by data
     fn save_bytes(
         bytes: Bytes,
         name: &str,
