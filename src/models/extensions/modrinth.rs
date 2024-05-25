@@ -1,9 +1,10 @@
-use log::debug;
+use log::trace;
 use serde::Deserialize;
 use serde::Serialize;
 
 use crate::errors::error::{Error, Result};
 use crate::not_found_plugin_error;
+use crate::not_found_plugin_link_error;
 use crate::settings::extensions::plugin::Plugin;
 use crate::tr::hash::ChooseHash;
 use crate::tr::model::extension::ModelExtensions;
@@ -17,9 +18,9 @@ pub struct ModrinthData {
     //Always change ich version
     id: String,
     //Stable token.
-    project_id: String,
+    // project_id: String,
     files: Vec<File>,
-    dependencies: Vec<Dependency>,
+    // dependencies: Vec<Dependency>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -50,38 +51,57 @@ impl ModelExtensions for ModrinthData {
         game_version: &str,
         loader: &str,
     ) -> Result<(Self::Link, ChooseHash, Self::Version)> {
-        let link: String = {
-            // TODO: Make normal params!
-            match game_version {
-                "Latest" => {
-                    let channel = ext.channel().get_str().await;
-                    let link = format!("https://api.modrinth.com/v2/project/{}/version?&loaders=[\"{}\"]&featured=true&version_type={}", name, loader, channel);
-                    debug!("Plugin: {} -> Link: {}", name, link);
-                    link
+        let channel = ext.channel().get_str().await.to_string();
+        let link = format!("https://api.modrinth.com/v2/project/{}/version", name);
+
+        let loader = {
+            if loader.to_lowercase() == "purpur" {
+                "paper"
+            } else {
+                loader
+            }
+        };
+        let query = {
+            match game_version.to_lowercase().as_str() {
+                "latest" => {
+                    vec![
+                        // ("game_version", format!("[\"{}\"]", game_version)),
+                        ("loaders", format!("[\"{}\"]", loader)),
+                        ("featured", true.to_string()),
+                        ("version_type", channel),
+                    ]
                 }
+
                 _ => {
-                    let channel = ext.channel().get_str().await;
-                    let link = format!("https://api.modrinth.com/v2/project/{}/version?game_versions=[\"{}\"]&loaders=[\"{}\"]&featured=true&version_type={}", name, game_version, loader, channel);
-                    debug!("Plugin: {} -> Link: {}", name, link);
-                    link
+                    vec![
+                        ("game_version", format!("[\"{}\"]", game_version)),
+                        ("loaders", format!("[\"{}\"]", loader)),
+                        ("featured", true.to_string()),
+                        ("version_type", channel),
+                    ]
                 }
             }
         };
-        let modrinth_data: Vec<ModrinthData> = reqwest::get(link).await?.json().await?;
+        trace!("query: {:#?}", &query);
+        let client = reqwest::Client::builder()
+            .user_agent("TOwInOK/Minecraft-Dependency-Controller (TOwInOK@nothub.ru) TestPoligon")
+            .build()?;
+
+        let modrinth_data: Vec<ModrinthData> =
+            client.get(&link).query(&query).send().await?.json().await?;
         let modrinth_data = match modrinth_data.first() {
             Some(e) => Ok(e),
             None => not_found_plugin_error!(name),
         }?;
-        Ok(modrinth_data
-            .files
-            .first()
-            .map(|x| {
-                (
-                    x.url.to_string(),
-                    ChooseHash::SHA1(x.hashes.sha1.to_string()),
-                    modrinth_data.id.to_owned(),
-                )
-            })
-            .unwrap())
+        match modrinth_data.files.first().map(|x| {
+            (
+                x.url.to_string(),
+                ChooseHash::SHA1(x.hashes.sha1.to_string()),
+                modrinth_data.id.to_owned(),
+            )
+        }) {
+            Some(e) => Ok(e),
+            None => not_found_plugin_link_error!(name),
+        }
     }
 }

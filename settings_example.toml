@@ -1,27 +1,27 @@
 # Require
 [core] # just core, nothing here to change :)
-provider = "paper" # [vanilla, paper, folia, purpur, fabric, waterfall, velocity]
-version = "1.20.6" # Or Latest (latest -> get error)
+provider = "paper"  # [vanilla, paper, folia, purpur, fabric, waterfall, velocity]
+version = "1.20.6"  # Or Latest (latest -> get error)
 force_update = true
 
 # Optional
 [plugins.name] # name be used only in kebab-case
-source = "modrinth" # [hangar, modrinth] => modrinth by default
-version = "ffdfdsd" # numbers of this version.
-channel = "release" # [release, beta, alpha] => release
-freeze = false # false || true => false by default
+source = "modrinth"  # [hangar, modrinth] => modrinth by default
+version = "ffdfdsd"  # numbers of this version.
+channel = "release"  # [release, beta, alpha] => release
+freeze = false       # false || true => false by default
 force_update = false # false || true => false by default
 
 # Optional
-[mods.name] # name be used only in kebab-case
-source = "modrinth" # [hangar, modrinth] => modrinth by default
-version = "ffdfdsd" # numbers of this version.
-channel = "release" # [release, beta, alpha] => release
-freeze = false # false || true => false by default
+[mods.name] # name be used only in kebab-case ^Not implemented!!!
+source = "modrinth"  # [hangar, modrinth] => modrinth by default
+version = "ffdfdsd"  # numbers of this version.
+channel = "release"  # [release, beta, alpha] => release
+freeze = false       # false || true => false by default
 force_update = false # false || true => false by default
 
 # Optional
 [additions]
-source = "git@github.com:Username/Super-Config.git" # Optional, require for key
-key = "MySuperMegaKey" # Optional, don't work without link
-duraction = 300 # Optional, value of duraction between manager checker iterations (in seconds)
+source = "git@github.com:Username/Super-Config.git" # Optional, require for key ^Not implemented!!!
+key = "MySuperMegaKey"                              # Optional, don't work without link ^Not implemented!!!
+duraction = 300                                     # Optional, value of duraction between manager check iterations (in seconds) => 300 by default

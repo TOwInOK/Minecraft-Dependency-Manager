@@ -1,6 +1,14 @@
 use indicatif::ProgressBar;
 use serde::{Deserialize, Serialize};
 
+use crate::dictionary::pb_messages::PbMessages;
+use crate::tr::load::Load;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
+}
+
 use crate::{
     errors::error::{Error, Result},
     not_found_build_error, not_found_version_error,
@@ -50,13 +58,13 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
     async fn get_link(core: &Core, pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
         let core_name = Self::CORE_NAME;
         // Start work
-        pb.set_message("Init work");
+        pb.set_message(&DICT.init_work);
         //get data from core
         let build = core.build();
         let version = core.version();
         //find link and version
 
-        pb.set_message("Finding version");
+        pb.set_message(&DICT.finding_version);
 
         let version = find_version(version, core_name).await?;
         let verlink = format!(
@@ -64,7 +72,7 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
             core_name, version
         );
 
-        pb.set_message("Make link");
+        pb.set_message(&DICT.make_link);
 
         let build_list: BuildList = reqwest::get(verlink).await?.json().await?;
         let build_list = build_list.builds.as_slice();

@@ -4,8 +4,8 @@ use crate::mananger::messages::Messages;
 
 #[derive(Error, Debug)]
 pub enum CompareHashError {
-    #[error("Хэш не совпадает")]
-    HashNotCompare(),
+    #[error("Хэш не совпадает: expect => {0}, value => {1}")]
+    HashNotCompare(String, String),
     #[error("Конвертация Sha1 проведена не успешно : {0}")]
     SHA1(std::io::Error),
     #[error("Конвертация Sha256 проведена не успешно : {0}")]
@@ -18,22 +18,20 @@ pub enum CompareHashError {
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Проблема с обработкой запроса: {0}")]
+    #[error("Reqwest error: {0}")]
     Reqwest(#[from] reqwest::Error),
-    #[error("Проблема с обработкой хэша: {0}")]
+    #[error("Hash corrupted: {0}")]
     CompareHash(CompareHashError),
-    // #[error("Проблема с скачиванием файла: {0}")]
-    // Download(String),
-    #[error("Ошибка ввода/вывода: {0}")]
+    #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("{0}")]
+    #[error("TOML parse error{0}")]
     TomlParse(String),
-    #[error("Ошибка сериализация TOML: {0}")]
+    #[error("Serialization of TOML error: {0}")]
     TomlSerialize(#[from] toml::ser::Error),
-    #[error("Не удалось найти: {0}")]
+    #[error("Not found: {0}")]
     NotFound(String),
-    #[error("Ошибка: {0}")]
-    Any(#[from] Box<dyn std::error::Error + Send>),
+    // #[error("Any error: {0}")]
+    // Any(#[from] Box<dyn std::error::Error + Send>),
     #[error("Task join error: {0}")]
     JoinError(#[from] tokio::task::JoinError),
     #[error("Indicatif template error: {0}")]
@@ -48,18 +46,20 @@ impl From<toml::de::Error> for Error {
         let value = value.to_string();
         let parts: Vec<&str> = value.split('|').collect();
 
-        // Проверяем, что индексы существуют и выбираем только нужные
         let message = if parts.len() >= 4 {
-            let third_part = parts[3].trim();
-            let trimmed_third_part = &third_part[2..]; // Удаляем первые три символа
+            let third_part: String = parts[3]
+                .trim()
+                .chars()
+                .filter(|x| *x != '^' || *x != '\\')
+                .collect();
             format!(
                 "   Where => {} ||| What => {} ||| why => {}   ",
                 parts[0].trim(),
                 parts[2].trim(),
-                trimmed_third_part
+                third_part
             )
         } else {
-            value.to_string() // Если не удалось разделить на нужное количество частей, вернем исходную строку
+            value.to_string()
         };
 
         Error::TomlParse(message)
@@ -83,13 +83,6 @@ macro_rules! not_found_path {
     };
 }
 
-// #[macro_export]
-// macro_rules! download_error {
-//     ($($arg:tt)*) => {
-//         Err(Error::Download(format!($($arg)*)))
-//     };
-// }
-
 #[macro_export]
 macro_rules! not_found_build_error {
     ($arg:tt) => {
@@ -112,6 +105,15 @@ macro_rules! not_found_plugin_error {
     ($arg:tt) => {
         Err(Error::NotFound(format!(
             "No one plugin: ->{}<-, has found.",
+            $arg
+        )))
+    };
+}
+#[macro_export]
+macro_rules! not_found_plugin_link_error {
+    ($arg:tt) => {
+        Err(Error::NotFound(format!(
+            "Not found link in for plugin: ->{}<-",
             $arg
         )))
     };

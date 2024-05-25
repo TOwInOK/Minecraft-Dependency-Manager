@@ -1,18 +1,28 @@
 pub mod core;
 pub mod ext;
 
+use indicatif::ProgressBar;
+use log::debug;
 use serde::{Deserialize, Serialize};
-use tokio::sync::RwLockReadGuard;
+use tokio::sync::RwLock;
 
 use self::core::CoreMeta;
 use self::ext::ExtensionMeta;
-use crate::errors::error::Result;
 use crate::settings::Settings;
+use crate::tr::delete::Delete;
 use crate::{
     settings::core::Core,
     tr::{load::Load, save::Save},
 };
-use std::{collections::HashMap, fs};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use crate::dictionary::pb_messages::PbMessages;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
+}
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Lock {
@@ -36,35 +46,44 @@ impl Lock {
     pub fn set_core(&mut self, value: Core, build: String) {
         self.core = value.to_meta(build);
     }
-    pub fn remove_plugin(&mut self, key: &str) -> Result<()> {
-        self.plugins.remove(key)
+    pub async fn remove_plugin(&mut self, key: &str) {
+        self.plugins.remove(key).await
     }
-    pub fn remove_mod(&mut self, key: &str) -> Result<()> {
-        self.mods.remove(key)
+    pub async fn remove_mod(&mut self, key: &str) {
+        self.mods.remove(key).await
     }
     //delete and make the current core the default
-    pub fn remove_core(&mut self) -> Result<()> {
-        fs::remove_file(self.core().path())?;
+    pub async fn remove_core(&mut self) {
+        //remove
         self.core = CoreMeta::default();
-        Ok(())
     }
-    pub fn remove_nonexistent(&mut self, settings: RwLockReadGuard<Settings>) -> Result<()> {
-        let plugin_keys: Vec<String> = self.plugins().0.keys().cloned().collect();
-        // TODO: let mods_keys
-        if let Some(e) = settings.plugins() {
-            for key in plugin_keys {
-                if !e.items().contains_key(&key) {
-                    self.remove_plugin(key.as_str())?;
+    pub async fn remove_nonexistent(
+        &mut self,
+        settings: Arc<RwLock<Settings>>,
+        pb: Arc<ProgressBar>,
+    ) {
+        debug!(
+            "fn() remove_nonexistent => keys list: {:#?}",
+            &self.plugins().0
+        );
+        pb.set_message(&DICT.start_remove_nonexist);
+        if let Some(settings_plugins) = settings.read().await.plugins() {
+            let lock_list = self.plugins().get_list().clone();
+            for (key, _) in lock_list {
+                if !settings_plugins.items().contains_key(&key) {
+                    pb.set_message(DICT.remove_if_nonexist(&key));
+                    debug!("{}", DICT.remove_if_nonexist(&key));
+                    self.remove_plugin(&key).await
                 }
             }
         }
         // TODO: add remover for mods
-        Ok(())
     }
 }
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct ExtensionMetaList(HashMap<String, ExtensionMeta>);
+
 impl ExtensionMetaList {
     pub fn get(&self, key: &str) -> Option<&ExtensionMeta> {
         self.0.get(key)
@@ -72,17 +91,18 @@ impl ExtensionMetaList {
     pub fn insert(&mut self, key: String, value: ExtensionMeta) {
         self.0.insert(key, value);
     }
-    pub fn remove(&mut self, key: &str) -> Result<()> {
-        let value = self.0.remove(key);
-        match value {
-            Some(e) => Ok(fs::remove_file(e.path())?),
-            None => Ok(()),
+    // make it traited
+    pub async fn remove(&mut self, key: &str) {
+        if let Some(e) = self.0.remove(key) {
+            self.delete(e.path()).await
         }
     }
-    pub fn update(&mut self, key: String, value: ExtensionMeta) -> Result<()> {
-        self.remove(&key)?;
+    pub async fn update(&mut self, key: String, value: ExtensionMeta) {
+        self.remove(&key).await;
         self.insert(key, value);
-        Ok(())
+    }
+    pub fn get_list(&self) -> &HashMap<String, ExtensionMeta> {
+        &self.0
     }
 }
 
@@ -92,3 +112,4 @@ impl Save for Lock {
 impl Load for Lock {
     const PATH: &'static str = "./lock.toml";
 }
+impl Delete for ExtensionMetaList {}

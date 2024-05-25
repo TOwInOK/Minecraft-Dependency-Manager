@@ -1,24 +1,29 @@
-use std::sync::Arc;
-use std::time::Duration;
+use crate::tr::load::Load;
+use std::{sync::Arc, time::Duration};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use log::debug;
+use lazy_static::lazy_static;
+use log::{debug, trace};
 use serde::{Deserialize, Serialize};
-use tokio::sync::Mutex;
-use tokio::time::sleep;
+use tokio::{sync::Mutex, time::sleep};
 
-use crate::errors::error::Result;
-use crate::lock::core::CoreMeta;
-use crate::lock::Lock;
-use crate::models::cores::folia::Folia;
-use crate::models::cores::paper::Paper;
-use crate::models::cores::purpur::Purpur;
-use crate::models::cores::vanilla::Vanilla;
-use crate::models::cores::velocity::Velocity;
-use crate::models::cores::waterfall::Waterfall;
-use crate::tr::hash::ChooseHash;
-use crate::tr::model::core::ModelCore;
-use crate::tr::{download::Download, save::Save};
+use crate::{
+    dictionary::pb_messages::PbMessages,
+    errors::error::Result,
+    lock::{core::CoreMeta, Lock},
+    models::cores::{
+        folia::Folia, paper::Paper, purpur::Purpur, vanilla::Vanilla, velocity::Velocity,
+        waterfall::Waterfall,
+    },
+    pb,
+    tr::{
+        delete::Delete, download::Download, hash::ChooseHash, model::core::ModelCore, save::Save,
+    },
+};
+
+lazy_static! {
+    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
+}
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 pub struct Core {
@@ -26,6 +31,7 @@ pub struct Core {
     #[serde(default)]
     provider: Provider,
     // Версия ядра
+    // Change to Enum!
     #[serde(default = "version")]
     version: String,
     // Версия билда ядра
@@ -91,31 +97,48 @@ impl Core {
     }
     /// Скачиваем `Core` и сохраняем его по стандартному пути.
     pub async fn download(&self, lock: Arc<Mutex<Lock>>, mpb: Arc<MultiProgress>) -> Result<()> {
-        let pb = mpb.add(ProgressBar::new_spinner());
-        pb.set_style(ProgressStyle::with_template(
-            "Package:: {prefix:.blue} >>>{spinner:.green} {msg:.blue} > eta: {eta:.blue}",
-        )?);
-        pb.set_prefix(self.provider.as_str());
-        // Check meta
+        let pb = pb!(mpb, self.provider.as_str());
 
         let (link, hash, build) = self.get_link(&pb).await?;
-
+        trace!("link: {}, hash: {}", &link, &hash);
         if let Some(e) = lock.lock().await.core().build() {
-            debug!("lock build: {} / build: {}", &e, &build);
+            trace!("lock build: {} / build: {}", &e, &build);
             if *e == build && (!self.force_update || self.freeze) {
-                pb.set_message("Does't need to update");
+                pb.set_message(&DICT.doest_need_to_update);
                 sleep(Duration::from_secs(1)).await;
                 pb.finish_and_clear();
                 return Ok(());
             }
         }
+        pb.set_message(&DICT.download_file);
         let file = Core::get_file(link, hash, &pb).await?;
-        pb.set_message("Saving file");
+        debug!("file: => {} | got", self.provider().as_str());
+        debug!("file: => {} | saving", self.provider().as_str());
+
+        pb.set_message(&DICT.delete_exist_version);
+        {
+            self.delete(lock.lock().await.core().path()).await;
+        }
+
+        pb.set_message(&DICT.saving_file);
         Core::save_bytes(file, self.provider().as_str()).await?;
-        *lock.lock().await.core_mut() = self.clone().to_meta(build);
-        lock.lock().await.save().await?;
-        pb.set_message("Done");
-        sleep(Duration::from_secs(1)).await;
+
+        debug!("file: => {} | saved", self.provider().as_str());
+        debug!("Data: => {} | start locking", self.provider().as_str());
+
+        pb.set_message(&DICT.write_to_lock);
+        {
+            let mut lock = lock.lock().await;
+            *lock.core_mut() = self.clone().to_meta(build);
+            lock.save().await?;
+        }
+
+        debug!(
+            "Data: => {} | written into lock file",
+            self.provider().as_str()
+        );
+
+        pb.set_message(&DICT.done);
         pb.finish_and_clear();
         Ok(())
     }
@@ -141,10 +164,10 @@ pub enum Provider {
     Vanilla, // done
     Paper,  // done
     Folia,  // done
-    Purpur, // in work, good api
+    Purpur, // done, good api
     Fabric, // in work, api with out hash
     //https://meta.fabricmc.net/v2/versions/game <- version check /v2/versions/intermediary give only stable
-    // or https://meta.fabricmc.net/v1/versions/game/1.14.4. Если нет версии, ответ пуст.
+    // or https://meta.fabricmc.net/v1/versions/game/1.14.4. If version is empty, response is empty.
     Forge,     //no api
     NeoForge,  //worst api
     Waterfall, // done
@@ -171,3 +194,4 @@ impl Download for Core {}
 impl Save for Core {
     const PATH: &'static str = "./";
 }
+impl Delete for Core {}

@@ -1,8 +1,8 @@
 [core]
 provider = "paper"
-version = "1.20.6"
+version = "1.20.4"
 
+[plugins]
 [plugins.simple-voice-chat]
 [plugins.chunky]
-[plugins.nbtapi]
-[plugins.chunkyborder]
+[plugins.discordsrv]

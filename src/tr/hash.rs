@@ -22,7 +22,7 @@ impl ChooseHash {
         match self {
             ChooseHash::SHA1(e) => {
                 let mut hashed = <Sha1 as Digest1>::new();
-                let mut buffer = Vec::<u8>::new();
+                let mut buffer = [0; 32];
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;
@@ -33,12 +33,15 @@ impl ChooseHash {
                 if e.eq(&format!("{:x}", result)) {
                     Ok(())
                 } else {
-                    Err(Error::CompareHash(CompareHashError::HashNotCompare()))
+                    Err(Error::CompareHash(CompareHashError::HashNotCompare(
+                        e.to_owned(),
+                        format!("{:x}", result),
+                    )))
                 }
             }
             ChooseHash::SHA256(e) => {
                 let mut hashed = <Sha256 as Digest256>::new();
-                let mut buffer = Vec::<u8>::new();
+                let mut buffer = [0; 32];
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;
@@ -49,12 +52,15 @@ impl ChooseHash {
                 if e.eq(&format!("{:x}", result)) {
                     Ok(())
                 } else {
-                    Err(Error::CompareHash(CompareHashError::HashNotCompare()))
+                    Err(Error::CompareHash(CompareHashError::HashNotCompare(
+                        e.to_owned(),
+                        format!("{:x}", result),
+                    )))
                 }
             }
             ChooseHash::MD5(e) => {
                 let mut hashed = <Md5 as Digest5>::new();
-                let mut buffer = Vec::<u8>::new();
+                let mut buffer = [0; 32];
                 while let Ok(n) = reader.read(&mut buffer).await {
                     if n == 0 {
                         break;
@@ -65,7 +71,10 @@ impl ChooseHash {
                 if e.eq(&format!("{:x}", result)) {
                     Ok(())
                 } else {
-                    Err(Error::CompareHash(CompareHashError::HashNotCompare()))
+                    Err(Error::CompareHash(CompareHashError::HashNotCompare(
+                        e.to_owned(),
+                        format!("{:x}", result),
+                    )))
                 }
             }
             ChooseHash::None => Ok(()),

@@ -1,3 +1,4 @@
+pub mod dictionary;
 pub mod errors;
 pub mod lock;
 pub mod mananger;
@@ -10,8 +11,5 @@ use crate::errors::error::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    pretty_env_logger::formatted_builder()
-        .filter_level(log::LevelFilter::Info)
-        .init();
     mananger::run().await
 }

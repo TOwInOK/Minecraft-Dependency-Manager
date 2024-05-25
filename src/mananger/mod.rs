@@ -4,28 +4,46 @@ pub mod messages;
 mod watch_changer;
 
 use std::sync::Arc;
+use std::time::Duration;
 
+use self::watch_changer::watch_changes;
+use crate::dictionary::pb_messages::PbMessages;
 use crate::errors::error::Result;
+use crate::settings::extensions::plugin::Plugin;
+use crate::tr::save::Save;
+use crate::{lock, settings, tr};
 use indicatif::{MultiProgress, ProgressBar};
+use indicatif_log_bridge::LogWrapper;
+use lazy_static::lazy_static;
 use lock::Lock;
 use log::warn;
 use manage::manage;
 use settings::Settings;
+use tokio::fs::{self, File};
+use tokio::io::AsyncWriteExt;
+use tokio::time::sleep;
 use tokio::{
     sync::{mpsc, Mutex, RwLock},
     try_join,
 };
 use tr::load::Load;
 
-use crate::{lock, settings, tr};
-
-use self::watch_changer::watch_changes;
+lazy_static! {
+    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
+}
 
 pub async fn run() -> Result<()> {
+    let logger = pretty_env_logger::formatted_builder()
+        .filter_level(log::LevelFilter::Info)
+        .build();
     let (mpb, lock, settings) = init().await?;
-    //
+    let mpb_cloned = mpb.as_ref().clone();
+    LogWrapper::new(mpb_cloned, logger).try_init().unwrap();
+    // Init It!
     let pb = mpb.add(ProgressBar::new_spinner());
-    pb.finish_with_message("Init Minecraft Addon Controller");
+    pb.set_message(&DICT.intro);
+    sleep(Duration::from_secs(1)).await;
+    pb.finish_and_clear();
     //
     let (tx, rx) = mpsc::channel(20);
 
@@ -50,11 +68,43 @@ pub async fn run() -> Result<()> {
 }
 
 async fn init() -> Result<(Arc<MultiProgress>, Arc<Mutex<Lock>>, Arc<RwLock<Settings>>)> {
+    '_plugin_folder_scope: {
+        if fs::read_dir(Plugin::PATH).await.is_err() {
+            fs::create_dir(Plugin::PATH).await?
+        }
+    }
+    '_default_settings_scope: {
+        let path = <Settings as Load>::PATH;
+        if File::open(path).await.is_err() {
+            let default = Settings::default();
+            warn!("Create default config file");
+            let mut file = File::create(path).await?;
+            let toml_defefault = toml::to_string_pretty(&default)?;
+            file.write_all(toml_defefault.as_bytes()).await?;
+        }
+    }
+    '_default_lock_scope: {
+        let path = <Lock as Load>::PATH;
+        if File::open(path).await.is_err() {
+            let default = Lock::default();
+            warn!("Create default Lock file");
+            let mut file = File::create(path).await?;
+            let toml_defefault = toml::to_string_pretty(&default)?;
+            file.write_all(toml_defefault.as_bytes()).await?;
+        }
+    }
+    '_default_language_scope: {
+        let path = <PbMessages as Load>::PATH;
+        if File::open(path).await.is_err() {
+            let default = PbMessages::default();
+            warn!("Create default language file");
+            let mut file = File::create(path).await?;
+            let toml_defefault = toml::to_string_pretty(&default)?;
+            file.write_all(toml_defefault.as_bytes()).await?;
+        }
+    }
     let mpb: Arc<MultiProgress> = Arc::new(MultiProgress::new());
-    let lock: Arc<Mutex<Lock>> = Arc::new(Mutex::new(Lock::load().await.unwrap_or({
-        warn!("Use default Lock");
-        Lock::default()
-    })));
+    let lock: Arc<Mutex<Lock>> = Arc::new(Mutex::new(Lock::load().await?));
     let settings = Arc::new(RwLock::new(Settings::load().await?));
     Ok((mpb, lock, settings))
 }

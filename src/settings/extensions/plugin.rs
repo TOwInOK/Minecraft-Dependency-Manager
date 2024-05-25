@@ -2,8 +2,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::errors::error::Result;
 use crate::models::extensions::modrinth::ModrinthData;
+use crate::tr::download::Download;
 use crate::tr::hash::ChooseHash;
 use crate::tr::model::extension::ModelExtensions;
+use crate::tr::save::Save;
+
+const PATH: &str = "./plugins/";
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Default, Clone)]
 pub struct Plugin {
@@ -85,4 +89,9 @@ impl Channels {
             Channels::Alpha => "alpha",
         }
     }
+}
+
+impl Download for Plugin {}
+impl Save for Plugin {
+    const PATH: &'static str = PATH;
 }

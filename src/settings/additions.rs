@@ -10,15 +10,15 @@ pub struct Additions {
     key: Option<String>,
     // duraction of delay between download intervals
     #[serde(default = "duraction_default")]
-    duraction: Option<f64>,
+    duraction: Option<u64>,
 }
 
-fn duraction_default() -> Option<f64> {
-    Some(300f64)
+fn duraction_default() -> Option<u64> {
+    Some(300)
 }
 
 impl Additions {
-    pub fn new(source: Option<String>, key: Option<String>, duraction: Option<f64>) -> Self {
+    pub fn new(source: Option<String>, key: Option<String>, duraction: Option<u64>) -> Self {
         Self {
             source,
             key,
@@ -34,7 +34,7 @@ impl Additions {
         self.key.as_ref()
     }
 
-    pub fn duraction(&self) -> Option<f64> {
+    pub fn duraction(&self) -> Option<u64> {
         self.duraction
     }
 }

@@ -12,9 +12,10 @@
 
 # Что реализуется
 
-- [x] Обновление, загрузка плагинов.
-- [x] Обновление, загрузка ядра.
+- [x] Обновление, загрузка плагинов
+- [x] Обновление, загрузка ядра
 - [x] Чтение конфигурационных файлов
+- [x] Загрузка языкового файла
 - [ ] Запуск minecraft
 - [ ] Бекапы
 - [ ] Загрузка конфигурационных файлов через git
@@ -41,9 +42,10 @@
 
 # What is implemented
 
-- [x] Update, load plugins.
-- [x] Updating, loading kernels.
+- [x] Update, load plugins
+- [x] Updating, loading kernels
 - [x] Reading configuration files
+- [x] Load language file
 - [ ] Running minecraft
 - [ ] Backups
 - [ ] Uploading configuration files via git
@@ -67,7 +69,7 @@ There is a start, but we need to realize the loading of cores.
 
 ## Mods
 
-- Modrinth
+- Modrinth (soon)
 - CurseForge (not implemented)
 
 ## Cores

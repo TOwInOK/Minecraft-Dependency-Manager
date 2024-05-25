@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use indicatif::MultiProgress;
+use log::error;
 use tokio::sync::{Mutex, RwLock};
 use tokio::time::sleep;
 use tokio_util::sync::CancellationToken;
@@ -22,8 +23,8 @@ pub async fn download(
         .additions()
         .unwrap_or(&Additions::default())
         .duraction()
-        .unwrap_or(300f64);
-    let cooldown = Duration::from_secs_f64(duraction);
+        .unwrap_or(300);
+    let cooldown = Duration::from_secs(duraction);
     loop {
         '_core_scope: {
             let lock = Arc::clone(&lock);
@@ -50,6 +51,10 @@ pub async fn download(
                             mpb,
                         )
                         .await
+                        .map_err(|e| {
+                            error!("Plugin scope error {:#?}", &e);
+                            e
+                        })
                 } else {
                     Ok(())
                 }

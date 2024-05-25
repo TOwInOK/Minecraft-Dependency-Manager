@@ -6,7 +6,8 @@ pub struct ExtensionMeta {
     path: String,
 }
 impl ExtensionMeta {
-    pub fn new(build: String, path: String) -> Self {
+    pub fn new(build: String, path: &str, name: &str) -> Self {
+        let path = format!("{}{}.jar", path, name);
         Self { build, path }
     }
 
