@@ -1,13 +1,18 @@
-mod config;
-mod controller;
-mod downloader;
-mod errors;
-mod lock;
+pub mod dictionary;
+pub mod errors;
+pub mod lock;
+pub mod manager;
+pub mod models;
+pub mod query;
+pub mod settings;
+pub mod tr;
 
+use crate::errors::error::Result;
+use dictionary::dictionary::MessageDictionary;
+use once_cell::sync::Lazy;
+
+static DICTIONARY: Lazy<MessageDictionary> = Lazy::new(|| MessageDictionary::get_dict());
 #[tokio::main]
-async fn main() {
-    pretty_env_logger::formatted_builder()
-        .filter_level(log::LevelFilter::Trace)
-        .init();
-    controller::Controller::init().await
+async fn main() -> Result<()> {
+    manager::run().await
 }

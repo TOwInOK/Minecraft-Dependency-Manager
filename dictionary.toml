@@ -1,0 +1,32 @@
+intro = "MDM ready to work!"
+
+[downloader]
+calculate_hash = "Calculate hash..."
+delete_exist_version = "Delete exist version!"
+doest_need_to_update = "Does't need to update!"
+download_file = "Download file..."
+file_downloaded = "File downloaded!"
+saving_file = "Saving file..."
+write_to_lock = "Write to lock!"
+done = "Done!"
+
+[manager]
+waiting_new_iteration = "Waiting new iteration..."
+start_new_iteration = "Start new iteration!"
+stop_iteration = "Stop iteration!"
+restart = "Restarting..."
+
+[config]
+find_changes_in_settings = "Find some changes in settings!"
+settings_changed = "Settings changed"
+settings_rewritten = "Settings rewritten"
+settings_same = "Settings same"
+
+[model]
+init_work = "Generating link..."
+finding_version = "Finding version..."
+make_link = "Making link..."
+
+[defunct]
+start_remove_defunct = "Start remove defunct"
+remove_defunct = "Remove defunct"

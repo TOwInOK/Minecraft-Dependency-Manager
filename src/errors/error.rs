@@ -1,8 +1,11 @@
 use thiserror::Error;
 
-#[allow(dead_code)]
+use crate::manager::messages::Messages;
+
 #[derive(Error, Debug)]
 pub enum CompareHashError {
+    #[error("Хэш не совпадает: expect => {0}, value => {1}")]
+    HashNotCompare(String, String),
     #[error("Конвертация Sha1 проведена не успешно : {0}")]
     SHA1(std::io::Error),
     #[error("Конвертация Sha256 проведена не успешно : {0}")]
@@ -15,24 +18,54 @@ pub enum CompareHashError {
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Проблема с обработкой запроса: {0}")]
+    #[error("Reqwest error: {0}")]
     Reqwest(#[from] reqwest::Error),
-    #[error("Проблема с обработкой хэша: {0}")]
+    #[error("Hash corrupted: {0}")]
     CompareHash(CompareHashError),
-    // #[error("Проблема с скачиванием файла: {0}")]
-    // Download(String),
-    #[error("Ошибка ввода/вывода: {0}")]
+    #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Ошибка парсинга TOML: {0}")]
-    TomlParse(#[from] toml::de::Error),
-    #[error("Ошибка сериализация TOML: {0}")]
+    #[error("TOML parse error{0}")]
+    TomlParse(String),
+    #[error("Serialization of TOML error: {0}")]
     TomlSerialize(#[from] toml::ser::Error),
-    #[error("Не удалось найти: {0}")]
+    #[error("Not found: {0}")]
     NotFound(String),
-    // #[error("Ошибка: {0}")]
-    // Any(#[from] Box<dyn std::error::Error>),
+    // #[error("Any error: {0}")]
+    // Any(#[from] Box<dyn std::error::Error + Send>),
+    #[error("Task join error: {0}")]
+    JoinError(#[from] tokio::task::JoinError),
+    #[error("Indicatif template error: {0}")]
+    IndicatifTemplate(#[from] indicatif::style::TemplateError),
+    #[error("Indicatif template error: {0}")]
+    SendMessage(#[from] tokio::sync::mpsc::error::SendError<Messages>),
 }
 pub type Result<T> = std::result::Result<T, Error>;
+
+impl From<toml::de::Error> for Error {
+    fn from(value: toml::de::Error) -> Self {
+        let value = value.to_string();
+        let parts: Vec<&str> = value.split('|').collect();
+
+        let message = if parts.len() >= 4 {
+            let third_part: String = parts[3]
+                .trim()
+                .chars()
+                .filter(|x| *x != '^')
+                .filter(|x| *x != '\\')
+                .collect();
+            format!(
+                "Where => {} ||| What => {} ||| why => {}",
+                parts[0].trim(),
+                parts[2].trim(),
+                third_part
+            )
+        } else {
+            value.to_string()
+        };
+
+        Error::TomlParse(message)
+    }
+}
 
 #[macro_export]
 macro_rules! not_found {
@@ -43,20 +76,13 @@ macro_rules! not_found {
 
 #[macro_export]
 macro_rules! not_found_path {
-    ($arg:tt) => {
+    ($arg:expr) => {
         Err(Error::NotFound(format!(
             "No path like: ->{}<-, exist",
             $arg
         )))
     };
 }
-
-// #[macro_export]
-// macro_rules! download_error {
-//     ($($arg:tt)*) => {
-//         Err(Error::Download(format!($($arg)*)))
-//     };
-// }
 
 #[macro_export]
 macro_rules! not_found_build_error {
@@ -71,7 +97,10 @@ macro_rules! not_found_build_error {
 #[macro_export]
 macro_rules! not_found_version_error {
     ($arg:tt) => {
-        Err(Error::NotFound(format!("No one version ->{}<- find", $arg)))
+        Err(Error::NotFound(format!(
+            "No one version ->{:#?}<- find",
+            $arg
+        )))
     };
 }
 
@@ -80,6 +109,15 @@ macro_rules! not_found_plugin_error {
     ($arg:tt) => {
         Err(Error::NotFound(format!(
             "No one plugin: ->{}<-, has found.",
+            $arg
+        )))
+    };
+}
+#[macro_export]
+macro_rules! not_found_plugin_link_error {
+    ($arg:tt) => {
+        Err(Error::NotFound(format!(
+            "Not found link in for plugin: ->{}<-",
             $arg
         )))
     };

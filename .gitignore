@@ -1,5 +1,13 @@
 /target
-/core
-/plugins/
-minecraft_addon_controller.exe
-config.lock
+Cargo.lock
+lock.toml
+/.vscode
+/plugins/*
+paper.jar
+vanilla.jar
+purpur.jar
+folia.jar
+waterfall.jar
+./Cargo.lock
+src/.DS_Store
+./.DS_Store
