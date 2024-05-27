@@ -80,10 +80,13 @@ impl ModelExtensions for ModrinthData {
                 }
             }
         };
-        trace!("query: {:#?}", &query);
-        let client = reqwest::Client::builder()
-            .user_agent("TOwInOK/Minecraft-Dependency-Controller (TOwInOK@nothub.ru) TestPoligon")
-            .build()?;
+        trace!(target: "Modrinth", "query: {:#?}", &query);
+        let user_agent = format!(
+            "TOwInOK/Minecraft-Dependency-Manager (TOwInOK@nothub.ru) UID: {}",
+            machine_uid::get().unwrap()
+        );
+        trace!(target: "Modrinth", "User-Agent: {}", &user_agent);
+        let client = reqwest::Client::builder().user_agent(user_agent).build()?;
 
         let modrinth_data: Vec<ModrinthData> =
             client.get(&link).query(&query).send().await?.json().await?;

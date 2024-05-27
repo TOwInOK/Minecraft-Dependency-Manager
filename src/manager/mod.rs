@@ -29,7 +29,7 @@ use tr::load::Load;
 
 pub async fn run() -> Result<()> {
     let logger = pretty_env_logger::formatted_builder()
-        .filter_level(log::LevelFilter::Info)
+        .filter_level(log::LevelFilter::Trace)
         .build();
     let (mpb, lock, settings) = init().await?;
     let mpb_cloned = mpb.as_ref().clone();
