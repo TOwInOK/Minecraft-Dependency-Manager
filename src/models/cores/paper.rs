@@ -1,19 +1,12 @@
 use indicatif::ProgressBar;
 use serde::{Deserialize, Serialize};
 
-use crate::dictionary::pb_messages::PbMessages;
-use crate::tr::load::Load;
-use lazy_static::lazy_static;
-
-lazy_static! {
-    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
-}
-
 use crate::{
     errors::error::{Error, Result},
     not_found_build_error, not_found_version_error,
     settings::core::Core,
     tr::{hash::ChooseHash, model::core::ModelCore},
+    DICTIONARY,
 };
 
 pub struct Paper();
@@ -58,13 +51,13 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
     async fn get_link(core: &Core, pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
         let core_name = Self::CORE_NAME;
         // Start work
-        pb.set_message(&DICT.init_work);
+        pb.set_message(DICTIONARY.model().init_work());
         //get data from core
         let build = core.build();
         let version = core.version();
         //find link and version
 
-        pb.set_message(&DICT.finding_version);
+        pb.set_message(DICTIONARY.model().finding_version());
 
         let version = find_version(version, core_name).await?;
         let verlink = format!(
@@ -72,7 +65,7 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
             core_name, version
         );
 
-        pb.set_message(&DICT.make_link);
+        pb.set_message(DICTIONARY.model().make_link());
 
         let build_list: BuildList = reqwest::get(verlink).await?.json().await?;
         let build_list = build_list.builds.as_slice();
@@ -113,20 +106,20 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
 }
 
 //Find version in version list, if exist give out version or give error
-async fn find_version(version: &str, core_name: &str) -> Result<String> {
+async fn find_version(version: Option<&String>, core_name: &str) -> Result<String> {
     let link = format!("https://api.papermc.io/v2/projects/{}", core_name);
     let version_list = {
         let version_list: VersionList = reqwest::get(link).await?.json().await?;
         version_list.versions
     };
     match version {
-        "Latest" => match version_list.last() {
+        None => match version_list.last() {
             Some(e) => Ok(e.to_owned()),
             None => not_found_version_error!("Latest"),
         },
-        _ => {
-            if version_list.contains(&version.to_string()) {
-                Ok(version.to_owned())
+        Some(e) => {
+            if version_list.contains(&e) {
+                Ok(e.to_owned())
             } else {
                 not_found_version_error!(version)
             }

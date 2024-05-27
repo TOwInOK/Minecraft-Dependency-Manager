@@ -17,14 +17,14 @@ pub async fn download(
     mpb: Arc<MultiProgress>,
     key: Arc<CancellationToken>,
 ) -> Result<()> {
-    let duraction = settings
+    let duration = settings
         .read()
         .await
         .additions()
         .unwrap_or(&Additions::default())
-        .duraction()
+        .duration()
         .unwrap_or(300);
-    let cooldown = Duration::from_secs(duraction);
+    let cooldown = Duration::from_secs(duration);
     loop {
         '_core_scope: {
             let lock = Arc::clone(&lock);

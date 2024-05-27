@@ -1,27 +1,20 @@
-use crate::tr::load::Load;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use futures_util::future::join_all;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use lazy_static::lazy_static;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 
 use super::plugin::Plugin;
-use crate::dictionary::pb_messages::PbMessages;
 use crate::errors::error::Result;
 use crate::lock::ext::ExtensionMeta;
 use crate::lock::Lock;
-use crate::pb;
 use crate::tr::hash::ChooseHash;
 use crate::tr::{download::Download, save::Save};
-
-lazy_static! {
-    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
-}
+use crate::{pb, DICTIONARY};
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
 pub struct Plugins(HashMap<String, Plugin>);
@@ -38,7 +31,7 @@ impl Plugins {
     pub async fn download_all(
         &self,
         loader: &str,
-        game_version: &str,
+        game_version: Option<&String>,
         lock: Arc<Mutex<Lock>>,
         mpb: Arc<MultiProgress>,
     ) -> Result<()> {
@@ -48,10 +41,10 @@ impl Plugins {
         Ok(())
     }
 
-    /// Check lock extensions with config extesions
+    /// Check lock extensions with config extensions
     async fn check_plugins(
         &self,
-        game_version: &str,
+        game_version: Option<&String>,
         loader: &str,
         mpb: Arc<MultiProgress>,
         lock: &Arc<Mutex<Lock>>,
@@ -61,7 +54,7 @@ impl Plugins {
             debug!("check extension: {}", &name);
             // Get link
             let (link, hash, build) = plugin.get_link(name, game_version, loader).await?;
-            debug!("got a link to the extesion: {}", &name);
+            debug!("got a link to the extension: {}", &name);
             let pb = pb!(mpb, name);
             debug!("check meta: {}", &name);
             // Check meta
@@ -70,7 +63,7 @@ impl Plugins {
                 // Need to download?
                 if *local_build == build && !plugin.force_update() || plugin.freeze() {
                     debug!("Does't need to update: {}", &name);
-                    pb.set_message(&DICT.doest_need_to_update);
+                    pb.set_message(DICTIONARY.downloader().doest_need_to_update());
                     pb.finish_and_clear();
                     continue;
                 }
@@ -96,17 +89,17 @@ fn make_handle_list(
 
             debug!("Remove exist version of {}", &name);
             {
-                pb.set_message(&DICT.delete_exist_version);
+                pb.set_message(DICTIONARY.downloader().delete_exist_version());
                 lock.lock().await.remove_plugin(&name).await;
             }
             debug!("Saving {}", &name);
 
-            pb.set_message(&DICT.saving_file);
+            pb.set_message(DICTIONARY.downloader().saving_file());
             Plugin::save_bytes(file, &name).await?;
 
             debug!("Write data to lock file {}", &name);
 
-            pb.set_message(&DICT.write_to_lock);
+            pb.set_message(DICTIONARY.downloader().write_to_lock());
             {
                 lock.lock()
                     .await
@@ -119,7 +112,7 @@ fn make_handle_list(
             debug!("Save meta data to lock of {}", &name);
 
             lock.lock().await.save().await?;
-            pb.set_message(&DICT.done);
+            pb.set_message(DICTIONARY.downloader().done());
 
             pb.finish_and_clear();
             Ok(())

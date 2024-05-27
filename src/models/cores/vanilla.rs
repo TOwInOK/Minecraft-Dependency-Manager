@@ -91,18 +91,16 @@ impl ModelCore for Vanilla {
 }
 
 ///Return `url` which get a json that contain links of all versions
-async fn find_version(version: &str) -> Result<(String, String)> {
+async fn find_version(version: Option<&String>) -> Result<(String, String)> {
     const LINK: &str = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
     // trace!("Start find version of core!");
     let response = reqwest::get(LINK).await?;
     let vanilla: Vanilla = response.json().await?;
-    let local_version = {
-        if version == "Latest" {
-            vanilla.latest.release
-        } else {
-            version.to_string()
-        }
+    let local_version = match version {
+        Some(e) => e.to_owned(),
+        None => vanilla.latest.release,
     };
+
     // info!("Need to find: {}", &local_version);
 
     // Use a temporary variable to hold the found version and URL

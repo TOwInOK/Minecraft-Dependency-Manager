@@ -49,11 +49,11 @@ impl Plugin {
         self.force_update
     }
     /// Get link from models.
-    pub async fn get_link<'a>(
-        &'a self,
-        name: &'a str,
-        game_version: &'a str,
-        loader: &'a str,
+    pub async fn get_link(
+        &self,
+        name: &str,
+        game_version: Option<&String>,
+        loader: &str,
     ) -> Result<(String, ChooseHash, String)> {
         match self.source {
             Sources::Hangar => todo!(),

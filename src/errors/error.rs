@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::mananger::messages::Messages;
+use crate::manager::messages::Messages;
 
 #[derive(Error, Debug)]
 pub enum CompareHashError {
@@ -50,10 +50,11 @@ impl From<toml::de::Error> for Error {
             let third_part: String = parts[3]
                 .trim()
                 .chars()
-                .filter(|x| *x != '^' || *x != '\\')
+                .filter(|x| *x != '^')
+                .filter(|x| *x != '\\')
                 .collect();
             format!(
-                "   Where => {} ||| What => {} ||| why => {}   ",
+                "Where => {} ||| What => {} ||| why => {}",
                 parts[0].trim(),
                 parts[2].trim(),
                 third_part
@@ -96,7 +97,10 @@ macro_rules! not_found_build_error {
 #[macro_export]
 macro_rules! not_found_version_error {
     ($arg:tt) => {
-        Err(Error::NotFound(format!("No one version ->{}<- find", $arg)))
+        Err(Error::NotFound(format!(
+            "No one version ->{:#?}<- find",
+            $arg
+        )))
     };
 }
 

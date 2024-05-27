@@ -1,0 +1,32 @@
+intro = "MDM готов к работе!"
+
+[downloader]
+calculate_hash = "Вычислить хэш..."
+delete_exist_version = "Удалить существующую версию!"
+doest_need_to_update = "Не нужно обновлять!"
+download_file = "Загрузить файл..."
+file_downloaded = "Файл загружен!"
+saving_file = "Сохранить файл..."
+write_to_lock = "Запись в замок!"
+done = "Выполнено!"
+
+[manager]
+waiting_new_iteration = "Ожидание новой итерации..."
+start_new_iteration = "Начать новую итерацию!"
+stop_iteration = "Остановить итерацию!"
+restart = "Перезапуск..."
+
+[config]
+find_changes_in_settings = "Найти изменения в настройках!"
+settings_changed = "Настройки изменены"
+settings_rewritten = "Настройки переписаны"
+settings_same = "Настройки прежние"
+
+[model]
+init_work = "Генерировать ссылку..."
+finding_version = "Поиск версии..."
+make_link = "Создание ссылки..."
+
+[defunct]
+start_remove_defunct = "Начать удаление дефункции"
+remove_defunct = "Удалить пропущенное"

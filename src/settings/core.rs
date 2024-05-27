@@ -1,14 +1,11 @@
-use crate::tr::load::Load;
 use std::{sync::Arc, time::Duration};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use lazy_static::lazy_static;
 use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 use tokio::{sync::Mutex, time::sleep};
 
 use crate::{
-    dictionary::pb_messages::PbMessages,
     errors::error::Result,
     lock::{core::CoreMeta, Lock},
     models::cores::{
@@ -16,38 +13,26 @@ use crate::{
         waterfall::Waterfall,
     },
     pb,
-    tr::{
-        delete::Delete, download::Download, hash::ChooseHash, model::core::ModelCore, save::Save,
-    },
+    tr::{download::Download, hash::ChooseHash, model::core::ModelCore, save::Save},
+    DICTIONARY,
 };
-
-lazy_static! {
-    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
-}
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 pub struct Core {
-    // Ядро
+    // Core
     #[serde(default)]
     provider: Provider,
-    // Версия ядра
-    // Change to Enum!
-    #[serde(default = "version")]
-    version: String,
-    // Версия билда ядра
+    // Version of Core
+    version: Option<String>,
+    // Build version of Core
     #[serde(default)]
     build: Option<String>,
-    // Приостановить обновление
+    // Freeze updates?
     #[serde(default)]
     freeze: bool,
-    // Нужно обновить
+    // Force update it?
     #[serde(default)]
     force_update: bool,
-}
-
-fn version() -> String {
-    // warn!("We use default core path!");
-    "Latest".to_string()
 }
 
 impl Core {
@@ -60,7 +45,7 @@ impl Core {
         &self.provider
     }
 
-    pub fn version(&self) -> &str {
+    pub fn version(&self) -> Option<&String> {
         self.version.as_ref()
     }
 
@@ -81,7 +66,7 @@ impl Core {
     }
 
     pub fn set_version(&mut self, version: String) {
-        self.version = version;
+        self.version = Some(version);
     }
 
     pub fn set_build(&mut self, build: Option<String>) {
@@ -95,7 +80,7 @@ impl Core {
     pub fn set_force_update(&mut self, force_update: bool) {
         self.force_update = force_update;
     }
-    /// Скачиваем `Core` и сохраняем его по стандартному пути.
+    /// Download `Core` and save it to standard path.
     pub async fn download(&self, lock: Arc<Mutex<Lock>>, mpb: Arc<MultiProgress>) -> Result<()> {
         let pb = pb!(mpb, self.provider.as_str());
 
@@ -104,29 +89,29 @@ impl Core {
         if let Some(e) = lock.lock().await.core().build() {
             trace!("lock build: {} / build: {}", &e, &build);
             if *e == build && (!self.force_update || self.freeze) {
-                pb.set_message(&DICT.doest_need_to_update);
+                pb.set_message(DICTIONARY.downloader().doest_need_to_update());
                 sleep(Duration::from_secs(1)).await;
                 pb.finish_and_clear();
                 return Ok(());
             }
         }
-        pb.set_message(&DICT.download_file);
+        pb.set_message(DICTIONARY.downloader().download_file());
         let file = Core::get_file(link, hash, &pb).await?;
         debug!("file: => {} | got", self.provider().as_str());
-        debug!("file: => {} | saving", self.provider().as_str());
 
-        pb.set_message(&DICT.delete_exist_version);
+        pb.set_message(DICTIONARY.downloader().delete_exist_version());
         {
-            self.delete(lock.lock().await.core().path()).await;
+            lock.lock().await.remove_core().await;
         }
 
-        pb.set_message(&DICT.saving_file);
+        debug!("file: => {} | saving", self.provider().as_str());
+        pb.set_message(DICTIONARY.downloader().saving_file());
         Core::save_bytes(file, self.provider().as_str()).await?;
-
         debug!("file: => {} | saved", self.provider().as_str());
+
         debug!("Data: => {} | start locking", self.provider().as_str());
 
-        pb.set_message(&DICT.write_to_lock);
+        pb.set_message(DICTIONARY.downloader().write_to_lock());
         {
             let mut lock = lock.lock().await;
             *lock.core_mut() = self.clone().to_meta(build);
@@ -138,7 +123,7 @@ impl Core {
             self.provider().as_str()
         );
 
-        pb.set_message(&DICT.done);
+        pb.set_message(DICTIONARY.downloader().done());
         pb.finish_and_clear();
         Ok(())
     }
@@ -194,4 +179,3 @@ impl Download for Core {}
 impl Save for Core {
     const PATH: &'static str = "./";
 }
-impl Delete for Core {}

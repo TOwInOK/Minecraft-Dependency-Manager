@@ -8,21 +8,21 @@ pub struct Additions {
     // git key
     #[serde(default)]
     key: Option<String>,
-    // duraction of delay between download intervals
-    #[serde(default = "duraction_default")]
-    duraction: Option<u64>,
+    // duration of delay between download intervals
+    #[serde(default = "duration_default")]
+    duration: Option<u64>,
 }
 
-fn duraction_default() -> Option<u64> {
+fn duration_default() -> Option<u64> {
     Some(300)
 }
 
 impl Additions {
-    pub fn new(source: Option<String>, key: Option<String>, duraction: Option<u64>) -> Self {
+    pub fn new(source: Option<String>, key: Option<String>, duration: Option<u64>) -> Self {
         Self {
             source,
             key,
-            duraction,
+            duration,
         }
     }
 
@@ -34,7 +34,7 @@ impl Additions {
         self.key.as_ref()
     }
 
-    pub fn duraction(&self) -> Option<u64> {
-        self.duraction
+    pub fn duration(&self) -> Option<u64> {
+        self.duration
     }
 }

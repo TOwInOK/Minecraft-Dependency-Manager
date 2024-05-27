@@ -9,16 +9,11 @@ use tokio::sync::mpsc::Sender;
 use tokio::sync::{Mutex, RwLock};
 
 use crate::errors::error::Result;
-use crate::mananger::messages::Messages;
+use crate::manager::messages::Messages;
 use crate::tr::load::Load;
+use crate::DICTIONARY;
 use crate::{lock::Lock, settings::Settings};
 
-use crate::dictionary::pb_messages::PbMessages;
-use lazy_static::lazy_static;
-
-lazy_static! {
-    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
-}
 /// Load downloader module.
 /// Always check config file.
 /// Use `token` for canceling minecraft task
@@ -44,7 +39,7 @@ pub async fn watch_changes(
         debug!("Start remove_nonexistent");
         let pb = Arc::clone(&pb);
         let settings = Arc::clone(&settings);
-        lock.lock().await.remove_nonexistent(settings, pb).await;
+        lock.lock().await.remove_defunct(settings, pb).await;
     }
     // Send start to downloader
     {
@@ -57,23 +52,23 @@ pub async fn watch_changes(
     while rx.recv().await.is_some() {
         debug!("find iteration");
         let pb = Arc::clone(&pb);
-        pb.set_message(&DICT.find_changes_in_settings);
+        pb.set_message(DICTIONARY.config().find_changes_in_settings());
         let settings_new = Settings::load().await?;
         let settings = Arc::clone(&settings);
         if *settings.read().await != settings_new {
-            pb.set_message(&DICT.settings_changed);
+            pb.set_message(DICTIONARY.config().settings_changed());
             *settings.write().await = settings_new;
             {
                 debug!("Start remove_nonexistent");
                 let pb = Arc::clone(&pb);
-                lock.lock().await.remove_nonexistent(settings, pb).await;
+                lock.lock().await.remove_defunct(settings, pb).await;
             }
             debug!("Start downloader (message)");
-            pb.set_message(&DICT.settings_has_rewrited);
+            pb.set_message(DICTIONARY.config().settings_rewritten());
             manager_tx.send(Messages::Restart(pb)).await?;
         } else {
             debug!("Nothing to update (config)");
-            pb.set_message(&DICT.settings_same);
+            pb.set_message(DICTIONARY.config().settings_same());
             pb.finish_and_clear();
         }
     }

@@ -8,6 +8,6 @@ vanilla.jar
 purpur.jar
 folia.jar
 waterfall.jar
-Cargo.lock
+./Cargo.lock
 src/.DS_Store
 ./.DS_Store

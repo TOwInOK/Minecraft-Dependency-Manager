@@ -1,21 +1,26 @@
 use serde::{Deserialize, Serialize};
 
-use crate::settings::core::Provider;
+use crate::{settings::core::Provider, tr::delete::Delete};
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
 pub struct CoreMeta {
-    // Ядро
+    // Name of Core
     provider: Provider,
-    // Версия ядра
-    version: String,
-    // Версия билда ядра
+    // Version of core
+    version: Option<String>,
+    // Build version of Core
     build: Option<String>,
-    // Путь до ядра
+    // Path to core
     path: String,
 }
 
 impl CoreMeta {
-    pub fn new(provider: Provider, version: String, build: Option<String>, path: String) -> Self {
+    pub fn new(
+        provider: Provider,
+        version: Option<String>,
+        build: Option<String>,
+        path: String,
+    ) -> Self {
         Self {
             provider,
             version,
@@ -28,8 +33,8 @@ impl CoreMeta {
         &self.provider
     }
 
-    pub fn version(&self) -> &str {
-        &self.version
+    pub fn version(&self) -> Option<&String> {
+        self.version.as_ref()
     }
 
     pub fn build(&self) -> Option<&String> {
@@ -38,4 +43,8 @@ impl CoreMeta {
     pub fn path(&self) -> &str {
         self.path.as_ref()
     }
+    pub async fn remove(&mut self) {
+        self.delete(&self.path).await;
+    }
 }
+impl Delete for CoreMeta {}

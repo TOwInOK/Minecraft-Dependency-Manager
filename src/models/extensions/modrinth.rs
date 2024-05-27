@@ -48,7 +48,7 @@ impl ModelExtensions for ModrinthData {
     async fn get_link(
         ext: &Self::Ext,
         name: &str,
-        game_version: &str,
+        game_version: Option<&String>,
         loader: &str,
     ) -> Result<(Self::Link, ChooseHash, Self::Version)> {
         let channel = ext.channel().get_str().await.to_string();
@@ -62,8 +62,8 @@ impl ModelExtensions for ModrinthData {
             }
         };
         let query = {
-            match game_version.to_lowercase().as_str() {
-                "latest" => {
+            match game_version {
+                None => {
                     vec![
                         // ("game_version", format!("[\"{}\"]", game_version)),
                         ("loaders", format!("[\"{}\"]", loader)),
@@ -72,9 +72,9 @@ impl ModelExtensions for ModrinthData {
                     ]
                 }
 
-                _ => {
+                Some(e) => {
                     vec![
-                        ("game_version", format!("[\"{}\"]", game_version)),
+                        ("game_version", format!("[\"{}\"]", e)),
                         ("loaders", format!("[\"{}\"]", loader)),
                         ("featured", true.to_string()),
                         ("version_type", channel),

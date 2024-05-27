@@ -81,19 +81,19 @@ impl ModelCore for Purpur {
 }
 
 //Find version in version list, if exist give out version or give error
-async fn find_version(version: &str) -> Result<String> {
+async fn find_version(version: Option<&String>) -> Result<String> {
     let version_list = {
         let version_list: VersionList = reqwest::get(MAIN_LINK).await?.json().await?;
         version_list.versions
     };
     match version {
-        "Latest" => match version_list.last() {
+        None => match version_list.last() {
             Some(e) => Ok(e.to_owned()),
             None => not_found_version_error!("Latest"),
         },
-        _ => {
-            if version_list.contains(&version.to_string()) {
-                Ok(version.to_owned())
+        Some(e) => {
+            if version_list.contains(&e) {
+                Ok(e.to_owned())
             } else {
                 not_found_version_error!(version)
             }

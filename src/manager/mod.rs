@@ -7,14 +7,13 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use self::watch_changer::watch_changes;
-use crate::dictionary::pb_messages::PbMessages;
+use crate::dictionary::dictionary::MessageDictionary;
 use crate::errors::error::Result;
 use crate::settings::extensions::plugin::Plugin;
 use crate::tr::save::Save;
-use crate::{lock, settings, tr};
+use crate::{lock, settings, tr, DICTIONARY};
 use indicatif::{MultiProgress, ProgressBar};
 use indicatif_log_bridge::LogWrapper;
-use lazy_static::lazy_static;
 use lock::Lock;
 use log::warn;
 use manage::manage;
@@ -28,10 +27,6 @@ use tokio::{
 };
 use tr::load::Load;
 
-lazy_static! {
-    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
-}
-
 pub async fn run() -> Result<()> {
     let logger = pretty_env_logger::formatted_builder()
         .filter_level(log::LevelFilter::Info)
@@ -41,7 +36,7 @@ pub async fn run() -> Result<()> {
     LogWrapper::new(mpb_cloned, logger).try_init().unwrap();
     // Init It!
     let pb = mpb.add(ProgressBar::new_spinner());
-    pb.set_message(&DICT.intro);
+    pb.set_message(DICTIONARY.intro());
     sleep(Duration::from_secs(1)).await;
     pb.finish_and_clear();
     //
@@ -79,8 +74,8 @@ async fn init() -> Result<(Arc<MultiProgress>, Arc<Mutex<Lock>>, Arc<RwLock<Sett
             let default = Settings::default();
             warn!("Create default config file");
             let mut file = File::create(path).await?;
-            let toml_defefault = toml::to_string_pretty(&default)?;
-            file.write_all(toml_defefault.as_bytes()).await?;
+            let toml_default = toml::to_string_pretty(&default)?;
+            file.write_all(toml_default.as_bytes()).await?;
         }
     }
     '_default_lock_scope: {
@@ -89,18 +84,18 @@ async fn init() -> Result<(Arc<MultiProgress>, Arc<Mutex<Lock>>, Arc<RwLock<Sett
             let default = Lock::default();
             warn!("Create default Lock file");
             let mut file = File::create(path).await?;
-            let toml_defefault = toml::to_string_pretty(&default)?;
-            file.write_all(toml_defefault.as_bytes()).await?;
+            let toml_default = toml::to_string_pretty(&default)?;
+            file.write_all(toml_default.as_bytes()).await?;
         }
     }
     '_default_language_scope: {
-        let path = <PbMessages as Load>::PATH;
+        let path = <MessageDictionary as Load>::PATH;
         if File::open(path).await.is_err() {
-            let default = PbMessages::default();
+            let default = MessageDictionary::default();
             warn!("Create default language file");
             let mut file = File::create(path).await?;
-            let toml_defefault = toml::to_string_pretty(&default)?;
-            file.write_all(toml_defefault.as_bytes()).await?;
+            let toml_default = toml::to_string_pretty(&default)?;
+            file.write_all(toml_default.as_bytes()).await?;
         }
     }
     let mpb: Arc<MultiProgress> = Arc::new(MultiProgress::new());

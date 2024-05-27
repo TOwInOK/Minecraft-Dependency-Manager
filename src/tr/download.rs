@@ -1,17 +1,9 @@
 use super::hash::ChooseHash;
-use crate::errors::error::Result;
+use crate::{errors::error::Result, DICTIONARY};
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
 use futures_util::StreamExt;
 use indicatif::ProgressBar;
-
-use crate::dictionary::pb_messages::PbMessages;
-use crate::tr::load::Load;
-use lazy_static::lazy_static;
-
-lazy_static! {
-    static ref DICT: PbMessages = PbMessages::load_sync().unwrap();
-}
 
 #[async_trait]
 pub trait Download {
@@ -22,7 +14,7 @@ pub trait Download {
         let size = response.content_length().unwrap_or(0);
         pb.set_length(size);
 
-        pb.set_message(&DICT.download_file);
+        pb.set_message(DICTIONARY.downloader().download_file());
 
         let mut size_upload = 0_u64;
         let mut content = BytesMut::new();
@@ -33,10 +25,10 @@ pub trait Download {
             pb.set_position(size_upload);
             content.extend_from_slice(&chunk)
         }
-        pb.set_message(&DICT.calculate_hash);
+        pb.set_message(DICTIONARY.downloader().calculate_hash());
         hash.calculate_hash(&*content).await?;
         // End
-        pb.set_message(&DICT.file_downloaded);
+        pb.set_message(DICTIONARY.downloader().file_downloaded());
         Ok(content.freeze())
     }
 }
