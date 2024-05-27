@@ -1,4 +1,4 @@
-# Minecraft Dependency Controller (MDC)
+# Minecraft Dependency Manager (MDM)
 
 [RU](#что-надо) ||| [EN](#what-you-need)
 
