@@ -1,7 +1,7 @@
 # Require
-[core] # just core, nothing here to change :)
+[core] # Core
 provider = "paper"  # [vanilla, paper, folia, purpur, fabric, waterfall, velocity]
-version = "1.20.6"  # Or Latest (latest -> get error)
+version = "1.20.6"  # Version of core. Optional. There's no writing is Latest
 force_update = true
 
 # Optional
@@ -12,8 +12,9 @@ channel = "release"  # [release, beta, alpha] => release
 freeze = false       # false || true => false by default
 force_update = false # false || true => false by default
 
+# Mods not implemented!!!
 # Optional
-[mods.name] # name be used only in kebab-case ^Not implemented!!!
+[mods.name] # name be used only in kebab-case 
 source = "modrinth"  # [hangar, modrinth] => modrinth by default
 version = "ffdfdsd"  # numbers of this version.
 channel = "release"  # [release, beta, alpha] => release
