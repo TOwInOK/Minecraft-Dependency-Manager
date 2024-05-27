@@ -66,8 +66,6 @@ struct Server {
 }
 
 impl ModelCore for Vanilla {
-    type Link = OuterLink;
-    type Version = VersionID;
     /// Making request to mojang api and find the link to download minecraft.jar
     async fn get_link(
         core: &Core,

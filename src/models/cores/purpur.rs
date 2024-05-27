@@ -38,10 +38,6 @@ struct FileHash {
 const MAIN_LINK: &str = "https://api.purpurmc.org/v2/purpur";
 
 impl ModelCore for Purpur {
-    type Link = String;
-
-    type Version = String;
-
     //find build and push link
     async fn get_link(core: &Core, _pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
         let build = core.build();

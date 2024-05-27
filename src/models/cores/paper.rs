@@ -8,7 +8,6 @@ use crate::{
     tr::{hash::ChooseHash, model::core::ModelCore},
     DICTIONARY,
 };
-
 pub struct Paper();
 impl ModelCorePaperFamily for Paper {
     const CORE_NAME: &'static str = "paper";
@@ -45,8 +44,6 @@ struct Application {
 }
 
 impl<T: ModelCorePaperFamily> ModelCore for T {
-    type Link = String;
-    type Version = String;
     //find build and push link
     async fn get_link(core: &Core, pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {
         let core_name = Self::CORE_NAME;

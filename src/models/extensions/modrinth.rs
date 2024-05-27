@@ -43,14 +43,12 @@ struct Dependency {
 
 impl ModelExtensions for ModrinthData {
     type Ext = Plugin;
-    type Link = String;
-    type Version = String;
     async fn get_link(
         ext: &Self::Ext,
         name: &str,
         game_version: Option<&String>,
         loader: &str,
-    ) -> Result<(Self::Link, ChooseHash, Self::Version)> {
+    ) -> Result<(String, ChooseHash, String)> {
         let channel = ext.channel().get_str().await.to_string();
         let link = format!("https://api.modrinth.com/v2/project/{}/version", name);
 
