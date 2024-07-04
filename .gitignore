@@ -10,4 +10,4 @@ folia.jar
 waterfall.jar
 ./Cargo.lock
 src/.DS_Store
-./.DS_Store
+.DS_Store
