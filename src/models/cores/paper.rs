@@ -103,7 +103,7 @@ impl<T: ModelCorePaperFamily> ModelCore for T {
 }
 
 //Find version in version list, if exist give out version or give error
-async fn find_version(version: Option<&String>, core_name: &str) -> Result<String> {
+async fn find_version(version: Option<&str>, core_name: &str) -> Result<String> {
     let link = format!("https://api.papermc.io/v2/projects/{}", core_name);
     let version_list = {
         let version_list: VersionList = reqwest::get(link).await?.json().await?;
@@ -115,7 +115,7 @@ async fn find_version(version: Option<&String>, core_name: &str) -> Result<Strin
             None => not_found_version_error!("Latest"),
         },
         Some(e) => {
-            if version_list.contains(&e) {
+            if version_list.contains(&e.to_string()) {
                 Ok(e.to_owned())
             } else {
                 not_found_version_error!(version)

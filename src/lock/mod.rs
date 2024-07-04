@@ -5,16 +5,14 @@ pub mod ext_metalist;
 use indicatif::ProgressBar;
 use log::debug;
 use serde::{Deserialize, Serialize};
-use tokio::sync::RwLock;
 
 use self::core::CoreMeta;
 use self::ext_metalist::ExtensionMetaList;
-use crate::settings::Settings;
-use crate::DICTIONARY;
 use crate::{
     settings::core::Core,
     tr::{load::Load, save::Save},
 };
+use crate::{DICTIONARY, SETTINGS};
 use std::sync::Arc;
 
 #[derive(Default, Serialize, Deserialize, Clone)]
@@ -49,7 +47,7 @@ impl Lock {
     pub async fn remove_core(&mut self) {
         self.core.remove().await;
     }
-    pub async fn remove_defunct(&mut self, settings: Arc<RwLock<Settings>>, pb: Arc<ProgressBar>) {
+    pub async fn remove_defunct(&mut self, pb: Arc<ProgressBar>) {
         debug!(
             "fn() remove_nonexistent => keys list: {:#?}",
             &self.plugins().0
@@ -57,7 +55,7 @@ impl Lock {
         pb.set_message(DICTIONARY.defunct().start_remove_defunct());
 
         // delete for core you can found in Core::download()
-        if let Some(settings_plugins) = settings.read().await.plugins() {
+        if let Some(settings_plugins) = SETTINGS.read().await.plugins() {
             let lock_list = self.plugins().get_list().clone();
             for (key, _) in lock_list {
                 if !settings_plugins.items().contains_key(&key) {

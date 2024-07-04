@@ -46,7 +46,7 @@ impl ModelExtensions for ModrinthData {
     async fn get_link(
         ext: &Self::Ext,
         name: &str,
-        game_version: Option<&String>,
+        game_version: Option<&str>,
         loader: &str,
     ) -> Result<(String, ChooseHash, String)> {
         let channel = ext.channel().get_str().await.to_string();

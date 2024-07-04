@@ -33,12 +33,12 @@ impl CoreMeta {
         &self.provider
     }
 
-    pub fn version(&self) -> Option<&String> {
-        self.version.as_ref()
+    pub fn version(&self) -> Option<&str> {
+        self.version.as_deref()
     }
 
-    pub fn build(&self) -> Option<&String> {
-        self.build.as_ref()
+    pub fn build(&self) -> Option<&str> {
+        self.build.as_deref()
     }
     pub fn path(&self) -> &str {
         self.path.as_ref()

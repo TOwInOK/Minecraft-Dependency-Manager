@@ -5,6 +5,7 @@ edition = "2021"
 
 
 [dependencies]
+async-lazy = { version = "=0.1.0", features = ["parking_lot"] }
 async-trait = "0.1.80"
 async-watcher = "0.3.0"
 bytes = "1.6.0"

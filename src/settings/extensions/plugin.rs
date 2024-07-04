@@ -52,7 +52,7 @@ impl Plugin {
     pub async fn get_link(
         &self,
         name: &str,
-        game_version: Option<&String>,
+        game_version: Option<&str>,
         loader: &str,
     ) -> Result<(String, ChooseHash, String)> {
         match self.source {

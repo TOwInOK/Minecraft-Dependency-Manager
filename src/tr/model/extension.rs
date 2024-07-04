@@ -6,7 +6,7 @@ pub trait ModelExtensions {
     fn get_link(
         ext: &Self::Ext,
         name: &str,
-        game_version: Option<&String>,
+        game_version: Option<&str>,
         loader: &str,
     ) -> impl std::future::Future<Output = Result<(String, ChooseHash, String)>> + Send; // Link, Hash, Build
 }

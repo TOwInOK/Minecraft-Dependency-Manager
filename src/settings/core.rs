@@ -1,20 +1,20 @@
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, trace};
 use serde::{Deserialize, Serialize};
-use tokio::{sync::Mutex, time::sleep};
+use tokio::time::sleep;
 
 use crate::{
     errors::error::Result,
-    lock::{core::CoreMeta, Lock},
+    lock::core::CoreMeta,
     models::cores::{
         folia::Folia, paper::Paper, purpur::Purpur, vanilla::Vanilla, velocity::Velocity,
         waterfall::Waterfall,
     },
     pb,
     tr::{download::Download, hash::ChooseHash, model::core::ModelCore, save::Save},
-    DICTIONARY,
+    DICTIONARY, LOCK, MPB,
 };
 
 #[derive(Deserialize, Serialize, Debug, Default, PartialEq, Clone)]
@@ -45,12 +45,12 @@ impl Core {
         &self.provider
     }
 
-    pub fn version(&self) -> Option<&String> {
-        self.version.as_ref()
+    pub fn version(&self) -> Option<&str> {
+        self.version.as_deref()
     }
 
-    pub fn build(&self) -> Option<&String> {
-        self.build.as_ref()
+    pub fn build(&self) -> Option<&str> {
+        self.build.as_deref()
     }
 
     pub fn freeze(&self) -> bool {
@@ -81,12 +81,12 @@ impl Core {
         self.force_update = force_update;
     }
     /// Download `Core` and save it to standard path.
-    pub async fn download(&self, lock: Arc<Mutex<Lock>>, mpb: Arc<MultiProgress>) -> Result<()> {
-        let pb = pb!(mpb, self.provider.as_str());
+    pub async fn download(&self) -> Result<()> {
+        let pb = pb!(MPB, self.provider.as_str());
 
         let (link, hash, build) = self.get_link(&pb).await?;
         trace!("link: {}, hash: {}", &link, &hash);
-        if let Some(e) = lock.lock().await.core().build() {
+        if let Some(e) = LOCK.lock().await.core().build() {
             trace!("lock build: {} / build: {}", &e, &build);
             if *e == build && (!self.force_update || self.freeze) {
                 pb.set_message(DICTIONARY.downloader().doest_need_to_update());
@@ -101,7 +101,7 @@ impl Core {
 
         pb.set_message(DICTIONARY.downloader().delete_exist_version());
         {
-            lock.lock().await.remove_core().await;
+            LOCK.lock().await.remove_core().await;
         }
 
         debug!("file: => {} | saving", self.provider().as_str());
@@ -113,7 +113,7 @@ impl Core {
 
         pb.set_message(DICTIONARY.downloader().write_to_lock());
         {
-            let mut lock = lock.lock().await;
+            let mut lock = LOCK.lock().await;
             *lock.core_mut() = self.clone().to_meta(build);
             lock.save().await?;
         }
