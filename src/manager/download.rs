@@ -22,7 +22,10 @@ pub async fn download(key: Arc<CancellationToken>) -> Result<()> {
         '_core_scope: {
             tokio::spawn(async move {
                 let settings = SETTINGS.read().await;
-                settings.core().download().await
+                settings.core().download().await.map_err(|e| {
+                    error!("Core scope error {:#?}", &e);
+                    e
+                })
             });
         }
         '_plugins_scope: {

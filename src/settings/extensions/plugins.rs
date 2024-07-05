@@ -48,13 +48,25 @@ impl Plugins {
             debug!("check meta: {}", &name);
             // Check meta
             if let Some(plugin_meta) = LOCK.lock().await.plugins().get(name) {
-                let local_build = plugin_meta.build();
-                // Need to download?
-                if *local_build == build && !plugin.force_update() || plugin.freeze() {
-                    debug!("Does't need to update: {}", &name);
+                let lock_build = plugin_meta.build();
+                if let Some(version) = plugin.version() {
+                    if version != build || version != lock_build {
+                        debug!(
+                            "{} version in config -> {}, in lock {}, in api {}",
+                            name, version, lock_build, build
+                        );
+                        link_list.push((link, hash, version.to_owned(), name.to_owned(), pb));
+                        continue;
+                    }
+                } else if lock_build == build && (!plugin.force_update() || plugin.freeze()) {
+                    debug!(
+                        "Does't need to update: {} | {} = {}",
+                        &name, &lock_build, &build
+                    );
                     pb.set_message(DICTIONARY.downloader().doest_need_to_update());
                     pb.finish_and_clear();
                     continue;
+                    // Need to download?
                 }
             }
             debug!("add link to list: {}", &name);

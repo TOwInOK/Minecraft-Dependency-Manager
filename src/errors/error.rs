@@ -98,7 +98,7 @@ macro_rules! not_found_build_error {
 macro_rules! not_found_version_error {
     ($arg:tt) => {
         Err(Error::NotFound(format!(
-            "No one version ->{:#?}<- find",
+            "No one version ->{:?}<- find",
             $arg
         )))
     };

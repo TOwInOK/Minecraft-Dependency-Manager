@@ -33,8 +33,8 @@ impl Plugin {
         &self.source
     }
 
-    pub fn version(&self) -> Option<&String> {
-        self.version.as_ref()
+    pub fn version(&self) -> Option<&str> {
+        self.version.as_deref()
     }
 
     pub fn channel(&self) -> &Channels {

@@ -19,9 +19,7 @@ use settings::Settings;
 use tokio::sync::{Mutex, RwLock};
 
 static DICTIONARY: Lazy<MessageDictionary> = Lazy::new(|| MessageDictionary::get_dict().unwrap());
-
 static MPB: Lazy<Arc<MultiProgress>> = Lazy::new(|| Arc::new(MultiProgress::new()));
-
 static SETTINGS: Lazy<Arc<RwLock<Settings>>> = Lazy::new(|| load_settings().unwrap());
 static LOCK: Lazy<Arc<Mutex<Lock>>> = Lazy::new(|| load_lock().unwrap());
 
