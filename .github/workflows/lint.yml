@@ -3,8 +3,7 @@ name: Lint
 on:
   push:
     branches:
-      # change for your branch name
-      - main
+      - master
 
 env:
   CARGO_TERM_COLOR: always
