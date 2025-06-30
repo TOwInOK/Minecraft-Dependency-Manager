@@ -29,10 +29,10 @@ Probably there is, will be added as needed.
 ## Preview
 
 ### zero
-![preview](.content/preview.mp4)
+![preview](.content/preview.webm)
 
 ### hot-reload
-![hot-reload](.content/hot-reload.mp4)
+![hot-reload](.content\hot-reload.webm)
 
 
 # Source:
