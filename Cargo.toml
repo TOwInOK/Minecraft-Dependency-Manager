@@ -1,8 +1,10 @@
 [package]
-name = "minecraft_dependency_manager"
+name = "mdm"
 version = "0.1.0"
 edition = "2021"
-
+authors = ["TOwInOK <60252419+TOwInOK@users.noreply.github.com>"]
+repository = "change_me"
+license = "MIT"
 
 [dependencies]
 async-lazy = { version = "=0.1.0", features = ["parking_lot"] }
@@ -26,3 +28,41 @@ thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-util = "0.7.11"
 toml = "0.8.12"
+
+
+[profile.dev]
+opt-level = 0
+debug = true
+strip = "none"
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 256
+rpath = false
+
+[profile.release]
+opt-level = 'z'
+debug = false
+lto = true
+codegen-units = 24
+panic = 'abort'
+strip = true
+incremental = true
+debug-assertions = false
+overflow-checks = false
+
+[profile.test]
+opt-level = 0
+debug = true
+
+[profile.bench]
+opt-level = 3
+debug = false
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = 'z'
+lto = true
+codegen-units = 1
