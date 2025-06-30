@@ -25,7 +25,6 @@ pub async fn manage(mut rx: Receiver<Messages>) -> Result<()> {
                     } else {
                         pb.set_message(DICTIONARY.manager().waiting_new_iteration());
                     }
-                    pb.finish_and_clear();
                 }
                 Messages::Stop(pb) => {
                     pb.finish_with_message(DICTIONARY.manager().stop_iteration());
@@ -35,7 +34,6 @@ pub async fn manage(mut rx: Receiver<Messages>) -> Result<()> {
                     let key = Arc::clone(&key);
                     pb.finish_with_message(DICTIONARY.manager().start_new_iteration());
                     tokio::spawn(download(key));
-                    pb.finish_and_clear();
                 }
             },
         }

@@ -27,7 +27,7 @@ use tr::load::Load;
 
 pub async fn run() -> Result<()> {
     let logger = pretty_env_logger::formatted_builder()
-        .filter_level(log::LevelFilter::Debug)
+        .filter_level(log::LevelFilter::Info)
         .build();
 
     '_plugin_folder_scope: {

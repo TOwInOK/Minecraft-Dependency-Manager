@@ -91,7 +91,6 @@ impl Core {
             if *e == build && (!self.force_update || self.freeze) {
                 pb.set_message(DICTIONARY.downloader().doest_need_to_update());
                 sleep(Duration::from_secs(1)).await;
-                pb.finish_and_clear();
                 return Ok(());
             }
         }
@@ -124,7 +123,6 @@ impl Core {
         );
 
         pb.set_message(DICTIONARY.downloader().done());
-        pb.finish_and_clear();
         Ok(())
     }
     async fn get_link(&self, pb: &ProgressBar) -> Result<(String, ChooseHash, String)> {

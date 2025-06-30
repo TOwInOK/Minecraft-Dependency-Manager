@@ -1,11 +1,14 @@
 # Minecraft Dependency Manager (MDM)
 
+Dependency manager for minecraft servers
+
 ## Features
 
 - [x] Reproducibility via configuration files
 - [x] Ability to load kernels and update them.
 - [x] CLI multi-language.
 - [x] Ability to load plugins and update them.
+- [x] Configuration hot-reload
 - [ ] Minecraft server startup and timed reboot.
 - [ ] Backup worlds
 - [ ] Download/backup/synchronize config files with git server
@@ -21,7 +24,16 @@ As datapacks are a specific tool that is better installed manually.
 
 Probably there is, will be added as needed.
 
----
+
+
+## Preview
+
+### zero
+![preview](.content\preview.mp4)
+
+### hot-reload
+![hot-reload](.content\hot-reload.mp4)
+
 
 # Source:
 

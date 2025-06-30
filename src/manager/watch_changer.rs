@@ -60,7 +60,6 @@ pub async fn watch_changes(manager_tx: Sender<Messages>) -> Result<()> {
         } else {
             debug!("Nothing to update (config)");
             pb.set_message(DICTIONARY.config().settings_same());
-            pb.finish_and_clear();
         }
     }
     Ok(())

@@ -64,7 +64,6 @@ impl Plugins {
                         &name, &lock_build, &build
                     );
                     pb.set_message(DICTIONARY.downloader().doest_need_to_update());
-                    pb.finish_and_clear();
                     continue;
                     // Need to download?
                 }
@@ -113,7 +112,6 @@ fn make_handle_list(
             LOCK.lock().await.save().await?;
             pb.set_message(DICTIONARY.downloader().done());
 
-            pb.finish_and_clear();
             Ok(())
         }));
     }
