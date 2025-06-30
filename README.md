@@ -27,15 +27,11 @@ Probably there is, will be added as needed.
 
 
 ## Preview
-
 ### zero
-![preview](.content/preview.webm)
+[preview.webm](https://github.com/user-attachments/assets/59d87ef4-5218-4b0e-8e71-81e14385f9e8)
+### Hot-reload
+[hot-reload.webm](https://github.com/user-attachments/assets/c50152be-1948-4298-85b1-0fe1d55bec31)
 
-### hot-reload
-![hot-reload](.content\hot-reload.webm)
-
-
-# Source:
 
 ## Plugins:
 
